@@ -32,17 +32,17 @@
     speedButton.title = 'Playback speed';
     speedButton.setAttribute('aria-label', 'Playback speed');
     speedButton.setAttribute('aria-expanded', 'false');
-    speedButton.innerHTML = '<span class="yt-speed-value">1ร—</span>';
+    speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
 
     speedMenu = document.createElement('div');
     speedMenu.className = 'yt-speed-menu';
     speedMenu.setAttribute('role', 'menu');
-    [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].forEach(rate => {
+    [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3].forEach(rate => {
       const item = document.createElement('button');
       item.type = 'button';
       item.className = 'yt-speed-option';
       item.dataset.rate = String(rate);
-      item.textContent = `${rate}ร—`;
+      item.textContent = `${rate}×`;
       item.setAttribute('role', 'menuitem');
       item.addEventListener('click', () => setPlaybackRate(rate));
       speedMenu.appendChild(item);
@@ -80,7 +80,7 @@
     if (!speedButton) return;
     const value = Number(rate) || 1;
     const label = Number.isInteger(value) ? String(value) : String(value).replace(/0$/, '');
-    speedButton.querySelector('.yt-speed-value').textContent = `${label}ร—`;
+    speedButton.querySelector('.yt-speed-value').textContent = `${label}×`;
   }
 
   function syncPlaybackRate() {
