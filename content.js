@@ -39,33 +39,103 @@
     button.type = 'button';
     button.className = 'yt-extension-download';
     button.textContent = 'Download';
-    button.title = 'บันทึกวิดีโอที่กำลังเล่น';
-    button.setAttribute('aria-label', 'บันทึกวิดีโอที่กำลังเล่น');
+    button.title = 'ดาวน์โหลดวิดีโอ';
+    button.setAttribute('aria-label', 'ดาวน์โหลดวิดีโอ');
     button.setAttribute('aria-expanded', 'false');
 
     const menu = document.createElement('div');
     menu.className = 'yt-download-menu';
     menu.setAttribute('role', 'menu');
+    menu.innerHTML = '<div class="yt-download-status">กำลังค้นหาสตรีม...</div>';
 
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'yt-download-option';
-    item.setAttribute('role', 'menuitem');
-    item.textContent = 'บันทึกวิดีโอที่กำลังเล่น (WebM)';
-    item.addEventListener('click', event => {
-      event.stopPropagation();
-      recordCurrentPlayback(item, wrap);
-    });
-    menu.appendChild(item);
-
-    button.addEventListener('click', event => {
+    button.addEventListener('click', async event => {
       event.stopPropagation();
       const open = wrap.classList.toggle('yt-download-open');
       button.setAttribute('aria-expanded', String(open));
+      if (open) await loadDownloadFormats(menu);
     });
 
     wrap.append(button, menu);
     return wrap;
+  }
+
+  async function loadDownloadFormats(menu) {
+    menu.innerHTML = '<div class="yt-download-status">กำลังค้นหาสตรีม...</div>';
+    try {
+      const playbackUrls = collectPlaybackUrls();
+      const result = await chrome.runtime.sendMessage({
+        type: 'GET_DOWNLOAD_FORMATS',
+        videoUrl: location.href,
+        playbackUrls
+      });
+      if (!result?.ok) throw new Error(result?.error || 'ไม่สามารถค้นหาสตรีมได้');
+      const formats = (result.formats || []).filter(item => item.url && !/[?&](?:range|rn|rbuf)=/.test(item.url));
+      if (!formats.length) throw new Error('วิดีโอนี้ไม่มีสตรีมไฟล์เดี่ยวที่ดาวน์โหลดได้');
+
+      menu.textContent = '';
+      formats.forEach(format => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'yt-download-option';
+        item.setAttribute('role', 'menuitem');
+        const size = format.contentLength ? ` • ${formatBytes(format.contentLength)}` : '';
+        item.textContent = `${format.qualityLabel || 'Video'}${format.fps ? ` • ${format.fps}fps` : ''}${size}`;
+        item.addEventListener('click', async event => {
+          event.stopPropagation();
+          item.disabled = true;
+          item.textContent = `กำลังดาวน์โหลด ${format.qualityLabel || 'Video'}... 0%`;
+          try {
+            const filename = `${sanitizeDownloadName(result.title)}-${format.qualityLabel || 'video'}.mp4`;
+            await downloadStreamToFile(format.url, filename, item);
+          } catch (error) {
+            item.disabled = false;
+            item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${error.message}`;
+          }
+        });
+        menu.appendChild(item);
+      });
+    } catch (error) {
+      menu.innerHTML = `<div class="yt-download-status yt-download-error">${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  async function downloadStreamToFile(streamUrl, filename, statusItem) {
+    const response = await fetch(streamUrl, { credentials: 'include', cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    if (contentType.includes('text/html') || contentType.includes('text/plain')) {
+      throw new Error('เซิร์ฟเวอร์ส่งข้อมูลที่ไม่ใช่วิดีโอ');
+    }
+    if (!response.body) throw new Error('เบราว์เซอร์ไม่รองรับการอ่านสตรีม');
+
+    const total = Number(response.headers.get('content-length')) || 0;
+    const chunks = [];
+    const reader = response.body.getReader();
+    let received = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.byteLength;
+      if (total) statusItem.textContent = `กำลังดาวน์โหลด... ${Math.min(100, Math.floor(received * 100 / total))}%`;
+      else statusItem.textContent = `กำลังดาวน์โหลด... ${formatBytes(received)}`;
+    }
+
+    const blob = new Blob(chunks, { type: contentType || 'video/mp4' });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    document.documentElement.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    statusItem.disabled = false;
+    statusItem.textContent = 'ดาวน์โหลดเสร็จแล้ว ✓';
+  }
+
+  function sanitizeDownloadName(name) {
+    return String(name || 'youtube-video').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 120) || 'youtube-video';
   }
 
   async function recordCurrentPlayback(item, wrap) {

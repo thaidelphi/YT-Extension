@@ -207,3 +207,15 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 สร้าง `docs/media_recording_download_technique.md` เพื่อเก็บเทคนิค `captureStream()` + `MediaRecorder` สำหรับงานระบบอื่น โดยอธิบายลำดับการทำงาน ตัวอย่างโค้ด ข้อดี ข้อจำกัด การเลือก MIME type การจัดการ error และแนวทาง UX แบบ Record → Stop → Save
 
 ระบุชัดเจนว่าเทคนิคนี้เป็น recording-based download ไม่ใช่ file downloader และไม่ควรใช้เพื่อหลบ DRM หรือระบบป้องกันเนื้อหา
+
+## 2026-09-06 — Continue Custom Download Engine
+
+### Prompt จากผู้ใช้
+ทำระบบ download ของเราต่อ
+
+### คำตอบ / ผลการดำเนินงาน
+ต่อยอด Custom Download Engine โดยเปลี่ยนเส้นทางดาวน์โหลดให้ใช้ `fetch()` จากหน้า YouTube สำหรับสตรีมที่ Extension ได้ URL โดยตรง แล้วอ่านข้อมูลแบบ `ReadableStream` พร้อมแสดง progress และสร้าง Blob เพื่อบันทึกไฟล์ โดยไม่ต้องรอวิดีโอเล่นจนจบและไม่ใช้ Download ของ YouTube
+
+ระบบกรอง URL แบบ segment/range ออกจากรายการไฟล์เดี่ยว เพื่อป้องกันการนำชิ้นส่วนวิดีโอมาโหลดเป็นไฟล์ผิดรูปแบบ และยังคงเก็บเทคนิค MediaRecorder ไว้ใน `docs/media_recording_download_technique.md` สำหรับนำไปใช้กับระบบอื่น
+
+ตรวจสอบ `content.js`, `background.js` และ `manifest.json` แล้วผ่าน validation
