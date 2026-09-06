@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   let lastVideoId = null;
   let button = null;
   let speedButton = null;
@@ -32,7 +32,7 @@
     speedButton.title = 'Playback speed';
     speedButton.setAttribute('aria-label', 'Playback speed');
     speedButton.setAttribute('aria-expanded', 'false');
-    speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
+    speedButton.innerHTML = '<span class="yt-speed-value">1ร—</span>';
 
     speedMenu = document.createElement('div');
     speedMenu.className = 'yt-speed-menu';
@@ -42,7 +42,7 @@
       item.type = 'button';
       item.className = 'yt-speed-option';
       item.dataset.rate = String(rate);
-      item.textContent = `${rate}×`;
+      item.textContent = `${rate}ร—`;
       item.setAttribute('role', 'menuitem');
       item.addEventListener('click', () => setPlaybackRate(rate));
       speedMenu.appendChild(item);
@@ -80,7 +80,7 @@
     if (!speedButton) return;
     const value = Number(rate) || 1;
     const label = Number.isInteger(value) ? String(value) : String(value).replace(/0$/, '');
-    speedButton.querySelector('.yt-speed-value').textContent = `${label}×`;
+    speedButton.querySelector('.yt-speed-value').textContent = `${label}ร—`;
   }
 
   function syncPlaybackRate() {
@@ -104,11 +104,11 @@
     el.classList.add('yt-dr-loading');
     try {
       const result = await chrome.runtime.sendMessage({ type: 'TOGGLE_DISLIKE', videoId });
-      if (!result?.ok) throw new Error(result?.error || 'ไม่สามารถส่ง Dislike ได้');
+      if (!result?.ok) throw new Error(result?.error || 'เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธชเนเธ Dislike เนเธ”เน');
       updateButton(result.rating);
     } catch (error) {
       console.error('[YT Dislike]', error);
-      showError(error.message || 'เกิดข้อผิดพลาด');
+      showError(error.message || 'เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”');
     } finally {
       el.disabled = false;
       el.classList.remove('yt-dr-loading');
@@ -133,13 +133,46 @@
     refreshTimer = setTimeout(() => button?.removeAttribute('data-error'), 5000);
   }
 
+  function skipAd() {
+    const skipButton = document.querySelector(
+      '.ytp-ad-skip-button, .ytp-ad-skip-button-modern, button.ytp-ad-skip-button-modern'
+    );
+    if (skipButton && !skipButton.disabled) {
+      skipButton.click();
+      return true;
+    }
+    return false;
+  }
+
+  function closeAdOverlay() {
+    const closeButton = document.querySelector(
+      '.ytp-ad-overlay-close-button, .ytp-ad-overlay-close-button-modern'
+    );
+    if (closeButton) {
+      closeButton.click();
+      return true;
+    }
+    return false;
+  }
+
+  function handleAd() {
+    const adShowing = document.querySelector('.ad-showing, .ad-interrupting');
+    if (!adShowing) return;
+    skipAd();
+    closeAdOverlay();
+  }
+
   function mount() {
     mountScheduled = false;
     if (!location.pathname.startsWith('/watch')) return;
+
+    handleAd();
+
     const container = document.querySelector('#top-level-buttons-computed');
-    if (!container) return;
-    if (!button || !document.contains(button)) button = createButton();
-    if (!container.contains(button)) container.appendChild(button);
+    if (container) {
+      if (!button || !document.contains(button)) button = createButton();
+      if (!container.contains(button)) container.appendChild(button);
+    }
 
     const playerControls = document.querySelector('.ytp-right-controls');
     if (playerControls) {
@@ -173,6 +206,6 @@
     setTimeout(scheduleMount, 100);
   });
   window.addEventListener('popstate', scheduleMount);
-  setInterval(scheduleMount, 3000);
+  setInterval(() => { scheduleMount(); handleAd(); }, 1000);
   scheduleMount();
 })();
