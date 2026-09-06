@@ -1,19 +1,21 @@
-﻿(() => {
+(() => {
   'use strict';
 
   const HIDDEN_ATTR = 'data-yt-dr-engine-hidden';
-  const state = { detected: false, signals: new Set(), lastAction: 0 };
+  const state = { detected: false, score: 0, signals: new Set(), lastAction: 0 };
+  const SCORE = {
+    'ad-showing': 5, 'ad-interrupting': 5, 'player-ad-showing': 5,
+    'player-ad-interrupting': 5, 'ad-module': 3, 'ad-overlay': 3,
+    'skip-button': 4, 'close-button': 2
+  };
+  const DETECT_THRESHOLD = 3;
   const selectors = [
     '.ytp-ad-module', '.ytp-ad-overlay-container', '.ytp-ad-overlay-slot',
     '.ytp-ad-text-overlay', '.ytp-ad-player-overlay', '.ytp-ad-image-overlay',
     '.ytp-ad-message-container', '.ytp-ad-action-interstitial', '.ytp-ad-action-panel',
-    '.ytp-ad-survey', '.ytp-ad-player-overlay-instream-info',
-    '.ytp-ad-player-overlay-layout'
+    '.ytp-ad-survey', '.ytp-ad-player-overlay-instream-info', '.ytp-ad-player-overlay-layout'
   ];
-  const skipSelectors = [
-    '.ytp-ad-skip-button', '.ytp-ad-skip-button-modern',
-    'button.ytp-ad-skip-button-modern', '.ytp-ad-skip-button-slot'
-  ];
+  const skipSelectors = ['.ytp-ad-skip-button', '.ytp-ad-skip-button-modern', 'button.ytp-ad-skip-button-modern', '.ytp-ad-skip-button-slot'];
   const closeSelectors = ['.ytp-ad-overlay-close-button', '.ytp-ad-overlay-close-button-modern'];
 
   function getPlayer() { return document.querySelector('#movie_player'); }
@@ -32,13 +34,16 @@
     if (hasVisible(skipSelectors.join(', '))) signals.add('skip-button');
     if (hasVisible(closeSelectors.join(', '))) signals.add('close-button');
     state.signals = signals;
-    state.detected = signals.size > 0;
+    state.score = [...signals].reduce((sum, signal) => sum + (SCORE[signal] || 0), 0);
+    state.detected = state.score >= DETECT_THRESHOLD;
     return state.detected;
   }
-  function clickReady(selectors) {
-    for (const selector of selectors) {
+  function clickReady(list) {
+    for (const selector of list) {
       const el = document.querySelector(selector);
-      if (el && !el.disabled && el.getClientRects().length) { el.click(); state.lastAction = Date.now(); return true; }
+      if (el && !el.disabled && el.getClientRects().length) {
+        el.click(); state.lastAction = Date.now(); return true;
+      }
     }
     return false;
   }
@@ -62,7 +67,11 @@
     });
   }
   function enforce() { if (detect()) clean(); else restore(); }
-  window.YTAdEngine = Object.freeze({ getState: () => ({ detected: state.detected, signals: [...state.signals] }), enforce });
+
+  window.YTAdEngine = Object.freeze({
+    getState: () => ({ detected: state.detected, score: state.score, threshold: DETECT_THRESHOLD, signals: [...state.signals] }),
+    enforce
+  });
 
   const observer = new MutationObserver(enforce);
   function start() {

@@ -32,7 +32,7 @@
     speedButton.title = 'Playback speed';
     speedButton.setAttribute('aria-label', 'Playback speed');
     speedButton.setAttribute('aria-expanded', 'false');
-    speedButton.innerHTML = '<span class="yt-speed-value">1ร—</span>';
+    speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
 
     speedMenu = document.createElement('div');
     speedMenu.className = 'yt-speed-menu';
@@ -42,7 +42,7 @@
       item.type = 'button';
       item.className = 'yt-speed-option';
       item.dataset.rate = String(rate);
-      item.textContent = `${rate}ร—`;
+      item.textContent = `${rate}×`;
       item.setAttribute('role', 'menuitem');
       item.addEventListener('click', () => setPlaybackRate(rate));
       speedMenu.appendChild(item);
@@ -80,7 +80,7 @@
     if (!speedButton) return;
     const value = Number(rate) || 1;
     const label = Number.isInteger(value) ? String(value) : String(value).replace(/0$/, '');
-    speedButton.querySelector('.yt-speed-value').textContent = `${label}ร—`;
+    speedButton.querySelector('.yt-speed-value').textContent = `${label}×`;
   }
 
   function syncPlaybackRate() {
@@ -137,8 +137,6 @@
     mountScheduled = false;
     if (!location.pathname.startsWith('/watch')) return;
 
-    handleAd();
-
     const container = document.querySelector('#top-level-buttons-computed');
     if (container) {
       if (!button || !document.contains(button)) button = createButton();
@@ -177,7 +175,7 @@
     setTimeout(scheduleMount, 100);
   });
   window.addEventListener('popstate', scheduleMount);
-  setInterval(() => { scheduleMount(); handleAd(); }, 1000);
+  setInterval(scheduleMount, 1000);
   scheduleMount();
 })();
 

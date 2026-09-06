@@ -81,3 +81,11 @@
 ### AI Result
 ��Ѻ�ç���ҧ�к� Ad Blocker �� YouTube Ad Detection Engine �¡� adblock/ad_engine.js ������õ�Ǩ�Ѻ�����ѭ�ҳ�ҡ player state, DOM ad modules/overlays, Skip/Close controls, MutationObserver ��� polling ����� bridge ����Ѻ SPA navigation ������¤����Ѻ�Դ�ͺ��ҹ�ɳ��͡�ҡ content.js.
 
+
+## 2026-09-06 — Ad Detection Scoring Engine
+
+### User Prompt
+ตกลง
+
+### AI Result
+เพิ่มระบบ Ad Detection Scoring Engine ให้แต่ละสัญญาณมีน้ำหนักคะแนน และใช้ threshold รวมในการตัดสินว่าเป็นโฆษณา แทนการพึ่งสัญญาณเดียว โดยยังคง DOM detection, player state, Skip/Close detection, MutationObserver และ polling ไว้เป็นหลายชั้น
