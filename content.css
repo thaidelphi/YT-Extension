@@ -147,3 +147,4 @@ html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
 .yt-download-option:disabled { cursor: wait; opacity: .65; }
 .yt-download-status { color: #fff; padding: 9px 12px; font: 400 12px Roboto, Arial, sans-serif; }
 .yt-download-error { max-width: 250px; white-space: normal; }
+.yt-download-recording .yt-download-option { cursor: wait; opacity: .8; }

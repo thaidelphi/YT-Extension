@@ -187,3 +187,13 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 ระบบจะปฏิเสธการดาวน์โหลดหากปลายทางตอบเป็นข้อความ/หน้า error แทนที่จะสร้างไฟล์ `.txt` ที่ใช้งานไม่ได้
 
 ตรวจสอบ syntax ของ `background.js`, `content.js`, `popup.js`, `adblock/ad_engine.js` และ JSON ของ `manifest.json` แล้วผ่าน
+
+## 2026-09-06 — แก้ Download ที่โหลดไม่ผ่าน / 403
+
+### Prompt จากผู้ใช้
+โหลดไม่ได้หมือนเดิม
+
+### คำตอบ / ผลการดำเนินงาน
+ตรวจสอบจากอาการและโค้ดพบว่า signed playback URL ของ googlevideo ไม่สามารถนำไปใช้ผ่าน chrome.downloads ได้อย่างเสถียร และการดาวน์โหลดตรงอาจตอบกลับ 403/text แทน media
+จึงเปลี่ยนระบบ Download ของ Extension ให้ใช้ `HTMLMediaElement.captureStream()` + `MediaRecorder` บันทึกการเล่นวิดีโอปัจจุบัน แล้วสร้างไฟล์ WebM ให้ผู้ใช้ดาวน์โหลดโดยตรงผ่าน browser แทนการส่ง signed stream URL ไปยัง Downloads API
+ระบบใหม่ไม่ใช้เมนู Download ของ YouTube และไม่แกะ/ข้าม DRM

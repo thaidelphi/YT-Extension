@@ -39,66 +39,101 @@
     button.type = 'button';
     button.className = 'yt-extension-download';
     button.textContent = 'Download';
-    button.title = 'ดาวน์โหลดวิดีโอ';
-    button.setAttribute('aria-label', 'ดาวน์โหลดวิดีโอ');
+    button.title = 'บันทึกวิดีโอที่กำลังเล่น';
+    button.setAttribute('aria-label', 'บันทึกวิดีโอที่กำลังเล่น');
     button.setAttribute('aria-expanded', 'false');
 
     const menu = document.createElement('div');
     menu.className = 'yt-download-menu';
     menu.setAttribute('role', 'menu');
-    menu.innerHTML = '<div class="yt-download-status">กำลังค้นหาคุณภาพ...</div>';
 
-    button.addEventListener('click', async event => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'yt-download-option';
+    item.setAttribute('role', 'menuitem');
+    item.textContent = 'บันทึกวิดีโอที่กำลังเล่น (WebM)';
+    item.addEventListener('click', event => {
+      event.stopPropagation();
+      recordCurrentPlayback(item, wrap);
+    });
+    menu.appendChild(item);
+
+    button.addEventListener('click', event => {
       event.stopPropagation();
       const open = wrap.classList.toggle('yt-download-open');
       button.setAttribute('aria-expanded', String(open));
-      if (open && !menu.dataset.loaded) await loadDownloadFormats(menu);
     });
 
     wrap.append(button, menu);
     return wrap;
   }
 
-  async function loadDownloadFormats(menu) {
-    const videoUrl = location.href;
-    try {
-      let playbackUrls = collectPlaybackUrls();
-      if (!playbackUrls.length) {
-        await new Promise(resolve => setTimeout(resolve, 350));
-        playbackUrls = collectPlaybackUrls();
-      }
-      const result = await chrome.runtime.sendMessage({ type: 'GET_DOWNLOAD_FORMATS', videoUrl, playbackUrls });
-      if (!result?.ok) throw new Error(result?.error || 'ไม่พบรูปแบบที่ดาวน์โหลดได้');
-      menu.textContent = '';
-      if (!result.formats?.length) throw new Error('วิดีโอนี้ไม่มีสตรีม MP4 ที่ดาวน์โหลดได้โดยตรง');
-      result.formats.forEach(format => {
-        const item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'yt-download-option';
-        item.setAttribute('role', 'menuitem');
-        const size = format.contentLength ? ` • ${formatBytes(format.contentLength)}` : '';
-        item.textContent = `${format.qualityLabel}${format.fps ? ` • ${format.fps}fps` : ''}${size}`;
-        item.addEventListener('click', async event => {
-          event.stopPropagation();
-          item.disabled = true;
-          item.textContent = 'กำลังเริ่มดาวน์โหลด...';
-          try {
-            const safeTitle = String(result.title || 'youtube-video').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
-            const filename = `${safeTitle}-${format.qualityLabel}.mp4`;
-            const started = await chrome.runtime.sendMessage({ type: 'START_DOWNLOAD', url: format.url, filename });
-            if (!started?.ok) throw new Error(started?.error || 'เริ่มดาวน์โหลดไม่สำเร็จ');
-            menu.parentElement.classList.remove('yt-download-open');
-          } catch (error) {
-            item.disabled = false;
-            item.textContent = `${format.qualityLabel} • ${error.message}`;
-          }
-        });
-        menu.appendChild(item);
-      });
-      menu.dataset.loaded = 'true';
-    } catch (error) {
-      menu.innerHTML = `<div class="yt-download-status yt-download-error">${escapeHtml(error.message)}</div>`;
+  async function recordCurrentPlayback(item, wrap) {
+    const v = video();
+    if (!v || typeof v.captureStream !== 'function' || typeof MediaRecorder === 'undefined') {
+      item.textContent = 'Chrome ไม่รองรับการบันทึกวิดีโอ';
+      return;
     }
+    if (v.ended) v.currentTime = 0;
+    const mimeTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    const mimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+    if (!mimeType) {
+      item.textContent = 'ไม่พบรูปแบบ WebM ที่รองรับ';
+      return;
+    }
+
+    const chunks = [];
+    const recorder = new MediaRecorder(v.captureStream(), { mimeType });
+    const originalText = item.textContent;
+    const startedAt = v.currentTime;
+    let timer = null;
+
+    item.disabled = true;
+    wrap.classList.add('yt-download-recording');
+    item.textContent = 'กำลังบันทึก... 0:00';
+    recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+    recorder.onerror = () => {
+      clearInterval(timer);
+      item.disabled = false;
+      item.textContent = 'บันทึกไม่สำเร็จ';
+      wrap.classList.remove('yt-download-recording');
+    };
+    recorder.onstop = () => {
+      clearInterval(timer);
+      const blob = new Blob(chunks, { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sanitizeDownloadName(document.title)}.webm`;
+      document.documentElement.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      item.disabled = false;
+      item.textContent = originalText;
+      wrap.classList.remove('yt-download-recording');
+      wrap.classList.remove('yt-download-open');
+    };
+
+    const stop = () => { if (recorder.state !== 'inactive') recorder.stop(); };
+    v.addEventListener('ended', stop, { once: true });
+    timer = setInterval(() => {
+      const elapsed = Math.max(0, Math.floor(v.currentTime - startedAt));
+      item.textContent = `กำลังบันทึก... ${formatDuration(elapsed)}`;
+    }, 1000);
+    recorder.start(1000);
+    try { await v.play(); } catch (_) {}
+  }
+
+  function sanitizeDownloadName(name) {
+    return String(name || 'youtube-video').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 120) || 'youtube-video';
+  }
+
+  function formatDuration(seconds) {
+    const value = Math.max(0, Math.floor(seconds));
+    const minutes = Math.floor(value / 60);
+    const secs = String(value % 60).padStart(2, '0');
+    return `${minutes}:${secs}`;
   }
 
   function collectPlaybackUrls() {
