@@ -38,3 +38,24 @@
 - Added DNR status reporting to the Control Center and preserved the saved toggle state across extension updates/startup.
 - Verified JavaScript syntax and `rules.json` JSON validity.
 - Push: SUCCESS — main → origin/main
+
+## 2026-09-06 — Playback Speed selection list
+- Changed Playback Speed from click-to-cycle behavior to a dropdown-style list of direct speed choices.
+- Added selected-state highlighting and automatic menu close after selection.
+- Commit/Push: pending
+
+
+## 2026-09-06 — เพิ่มปุ่ม Download
+- Added one Download button to the YouTube player controls.
+- The button attempts to invoke YouTube's own Download control when available; it does not extract or construct stream URLs.
+- Commit/Push: pending
+
+## 2026-09-06 — Final verification for Download button
+- Updated `content.js` and `content.css` for the new Download control.
+- JavaScript syntax verification: pending.
+- Push: pending.
+
+
+
+
+

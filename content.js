@@ -4,6 +4,7 @@
   let button = null;
   let speedControl = null;
   let speedButton = null;
+  let downloadButton = null;
   let mountScheduled = false;
   let errorTimer = null;
 
@@ -29,6 +30,31 @@
     return `${Number.isInteger(value) ? value : value}×`;
   }
 
+  function createDownloadButton() {
+    const el = document.createElement('button');
+    el.id = 'yt-extension-download';
+    el.type = 'button';
+    el.className = 'yt-extension-download';
+    el.textContent = 'Download';
+    el.title = 'เปิด Download ของ YouTube';
+    el.setAttribute('aria-label', 'เปิด Download ของ YouTube');
+    el.addEventListener('click', event => {
+      event.stopPropagation();
+      const native = [...document.querySelectorAll('button, tp-yt-paper-item, ytd-menu-service-item-renderer')]
+        .find(item => /download/i.test(`${item.getAttribute('aria-label') || ''} ${item.getAttribute('title') || ''} ${item.textContent || ''}`));
+      if (native) native.click();
+      else {
+        el.title = 'ไม่พบ Download ของ YouTube สำหรับวิดีโอนี้';
+        el.setAttribute('aria-label', el.title);
+        setTimeout(() => {
+          el.title = 'เปิด Download ของ YouTube';
+          el.setAttribute('aria-label', 'เปิด Download ของ YouTube');
+        }, 2500);
+      }
+    });
+    return el;
+  }
+
   function createSpeedControl() {
     const wrap = document.createElement('div');
     wrap.id = 'yt-speed-control';
@@ -41,17 +67,42 @@
     speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
     speedButton.addEventListener('click', event => {
       event.stopPropagation();
-      cyclePlaybackRate();
+      const open = wrap.classList.toggle('yt-speed-open');
+      speedButton.setAttribute('aria-expanded', String(open));
     });
-    wrap.append(speedButton);
+
+    const menu = document.createElement('div');
+    menu.className = 'yt-speed-menu';
+    menu.setAttribute('role', 'menu');
+    SPEEDS.forEach(rate => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'yt-speed-option';
+      item.dataset.rate = String(rate);
+      item.textContent = formatSpeed(rate);
+      item.setAttribute('role', 'menuitem');
+      item.addEventListener('click', event => {
+        event.stopPropagation();
+        setPlaybackRate(rate);
+        wrap.classList.remove('yt-speed-open');
+        speedButton.setAttribute('aria-expanded', 'false');
+      });
+      menu.appendChild(item);
+    });
+
+    wrap.append(speedButton, menu);
     return wrap;
   }
 
   function updateSpeed(rate) {
     if (!speedButton) return;
-    speedButton.querySelector('.yt-speed-value').textContent = formatSpeed(rate);
-    speedButton.title = `ความเร็ว ${formatSpeed(rate)} • คลิกเพื่อเปลี่ยน`;
-    speedButton.setAttribute('aria-label', `ความเร็ว ${formatSpeed(rate)} • คลิกเพื่อเปลี่ยน`);
+    const value = formatSpeed(rate);
+    speedButton.querySelector('.yt-speed-value').textContent = value;
+    speedButton.title = `ความเร็ว ${value} • คลิกเพื่อเลือก`;
+    speedButton.setAttribute('aria-label', `ความเร็ว ${value} • คลิกเพื่อเลือก`);
+    speedControl?.querySelectorAll('.yt-speed-option').forEach(item => {
+      item.classList.toggle('yt-speed-selected', Number(item.dataset.rate) === Number(rate));
+    });
   }
 
   function setPlaybackRate(rate) {
@@ -61,15 +112,6 @@
     if (!Number.isFinite(normalized)) return;
     v.playbackRate = normalized;
     updateSpeed(normalized);
-  }
-
-  function cyclePlaybackRate() {
-    const v = video();
-    if (!v) return;
-    const current = Number(v.playbackRate) || 1;
-    const index = SPEEDS.findIndex(rate => Math.abs(rate - current) < 0.01);
-    const next = SPEEDS[(index + 1) % SPEEDS.length];
-    setPlaybackRate(next);
   }
 
   async function applyDefaultSpeed() {
@@ -145,6 +187,15 @@
         speedControl = createSpeedControl();
         controls.prepend(speedControl);
       }
+
+      const existingDownload = controls.querySelector('#yt-extension-download');
+      if (existingDownload) {
+        downloadButton = existingDownload;
+      } else {
+        downloadButton = createDownloadButton();
+        controls.prepend(downloadButton);
+      }
+
       const v = video();
       if (v) updateSpeed(v.playbackRate);
     }
@@ -178,6 +229,7 @@
     button = null;
     speedControl = null;
     speedButton = null;
+    downloadButton = null;
     setTimeout(scheduleMount, 100);
   });
   window.addEventListener('popstate', scheduleMount);

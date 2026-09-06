@@ -102,3 +102,18 @@ html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
 .yt-speed-option.yt-speed-selected { background: rgba(255,255,255,.18); }
 .yt-speed-option.yt-speed-selected { font-weight: 600; }
 
+
+/* YouTube native Download launcher */
+.yt-extension-download {
+  height: 34px;
+  margin: 0 4px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: 500 13px Roboto, Arial, sans-serif;
+}
+.yt-extension-download:hover { background: rgba(255,255,255,.18); }
+.yt-extension-download:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
