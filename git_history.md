@@ -148,4 +148,4 @@
 - Updated stream discovery to reject `range` segment URLs while preserving signed query parameters.
 - Updated `prompt.md` with the new implementation record.
 - Commit: `4250cf1`
-- Push: pending
+- Push: SUCCESS — main → origin/main
