@@ -94,3 +94,9 @@
 - Rejects unsupported browsers/codecs with a clear UI message and shows recording progress.
 - Commit: `8e12ebe` — Use playback recording for reliable downloader
 - Push: SUCCESS — main → origin/main
+
+## 2026-09-06 — Document Media Recording Technique
+- Added `docs/media_recording_download_technique.md` documenting `captureStream()` + `MediaRecorder` for reuse in other browser-based systems.
+- Documented workflow, MIME/codec detection, error handling, UX, limitations, and DRM boundary.
+- Commit: `5c86ed9` — Document media recording technique
+- Push: SUCCESS — main → origin/main
