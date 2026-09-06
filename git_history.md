@@ -139,3 +139,13 @@
 - Started Offscreen media fetch with an HTTP Range header for better progressive-stream compatibility.
 - Commit/Push: pending
 
+
+
+## 4250cf1 — Build custom download engine v2
+- Added `download_engine.js` as the central custom download engine.
+- Added stream validation, MIME validation, byte/progress reporting and bounded retry for transient HTTP/network failures.
+- Updated the Offscreen Document to orchestrate the engine and report job state.
+- Updated stream discovery to reject `range` segment URLs while preserving signed query parameters.
+- Updated `prompt.md` with the new implementation record.
+- Commit: `4250cf1`
+- Push: pending
