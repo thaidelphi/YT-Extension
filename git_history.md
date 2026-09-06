@@ -100,3 +100,11 @@
 - Documented workflow, MIME/codec detection, error handling, UX, limitations, and DRM boundary.
 - Commit: `5c86ed9` â€” Document media recording technique
 - Push: SUCCESS â€” main â†’ origin/main
+
+## 2026-09-06 — Improve Custom Download Engine
+- Updated custom downloader to fetch directly from the YouTube page context when a usable progressive stream URL is available.
+- Added streamed download progress and Blob-based file save without waiting for playback to finish.
+- Filtered range/segment URLs from the download list.
+- Validation: content.js, background.js, manifest.json OK.
+- Commit: 27fb5d7; Push: SUCCESS — main  origin/main
+
