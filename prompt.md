@@ -161,3 +161,15 @@ Download ไม่ใช้ของ youtube สร้างระบบขึ�
 เปลี่ยนปุ่ม Download ให้เป็นระบบของ Extension เอง ไม่เรียกเมนู Download ของ YouTube โดยเพิ่มการค้นหาสตรีม MP4 ที่หน้า YouTube เปิดเผย, แสดงรายการคุณภาพ/เฟรมเรตที่ดาวน์โหลดได้ และใช้ Chrome Downloads API ของ Extension เพื่อเริ่มดาวน์โหลดโดยตรง
 
 ระบบจะใช้เฉพาะสตรีมที่มี URL โดยตรงและไม่พยายามถอด signatureCipher/ข้าม DRM หรือระบบป้องกันเนื้อหา
+
+## 2026-09-06 — Fix Custom Download ไม่สามารถดาวน์โหลด
+
+### Prompt จากผู้ใช้
+Download ไม่ได้
+
+### คำตอบ / ผลการดำเนินงาน
+ตรวจพบว่า Custom Downloader เดิมพึ่ง `streamingData.formats[].url` ซึ่งปัจจุบันอาจไม่มี URL ตรงสำหรับสตรีมที่กำลังเล่น จึงทำให้รายการดาวน์โหลดว่างหรือเริ่มดาวน์โหลดไม่ได้
+
+ปรับระบบให้เก็บ URL จาก `video.currentSrc` และ resource ที่ player โหลดจาก `googlevideo.com/videoplayback` แล้วส่งให้ background สำหรับสร้างรายการดาวน์โหลดโดยตรง พร้อมทำความสะอาด query ที่เป็น range ของ segment ก่อนส่งเข้า Chrome Downloads API
+
+เพิ่ม `googlevideo.com` ใน host permissions และตรวจสอบ syntax ของ `content.js`, `background.js` และ JSON ของ `manifest.json` แล้ว

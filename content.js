@@ -62,7 +62,12 @@
   async function loadDownloadFormats(menu) {
     const videoUrl = location.href;
     try {
-      const result = await chrome.runtime.sendMessage({ type: 'GET_DOWNLOAD_FORMATS', videoUrl });
+      let playbackUrls = collectPlaybackUrls();
+      if (!playbackUrls.length) {
+        await new Promise(resolve => setTimeout(resolve, 350));
+        playbackUrls = collectPlaybackUrls();
+      }
+      const result = await chrome.runtime.sendMessage({ type: 'GET_DOWNLOAD_FORMATS', videoUrl, playbackUrls });
       if (!result?.ok) throw new Error(result?.error || 'ไม่พบรูปแบบที่ดาวน์โหลดได้');
       menu.textContent = '';
       if (!result.formats?.length) throw new Error('วิดีโอนี้ไม่มีสตรีม MP4 ที่ดาวน์โหลดได้โดยตรง');
@@ -94,6 +99,17 @@
     } catch (error) {
       menu.innerHTML = `<div class="yt-download-status yt-download-error">${escapeHtml(error.message)}</div>`;
     }
+  }
+
+  function collectPlaybackUrls() {
+    const urls = [];
+    const current = video()?.currentSrc;
+    if (current && /^https:\/\//.test(current)) urls.push(current);
+    for (const entry of performance.getEntriesByType('resource')) {
+      const name = entry.name || '';
+      if (/^https:\/\/[^/]*googlevideo\.com\//.test(name) && /videoplayback/.test(name)) urls.push(name);
+    }
+    return [...new Set(urls)].slice(-20);
   }
 
   function formatBytes(bytes) {

@@ -16,7 +16,8 @@
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://oauth2.googleapis.com/*",
-    "https://www.googleapis.com/*"
+    "https://www.googleapis.com/*",
+    "https://*.googlevideo.com/*"
   ],
   "background": {
     "service_worker": "background.js"

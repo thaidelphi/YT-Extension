@@ -19,7 +19,7 @@ async function handleMessage(message) {
     case 'LOGOUT': await logout(); return { ok: true };
     case 'STATUS': return await getStatus();
     case 'SET_ADBLOCK': return await setAdBlockEnabled(message.enabled !== false);
-    case 'GET_DOWNLOAD_FORMATS': return await getDownloadFormats(message.videoUrl);
+    case 'GET_DOWNLOAD_FORMATS': return await getDownloadFormats(message.videoUrl, message.playbackUrls || []);
     case 'START_DOWNLOAD': return await startDownload(message.url, message.filename);
     default: throw new Error('ไม่รู้จักคำสั่งจาก Extension');
   }
@@ -189,37 +189,83 @@ async function sha256Base64Url(value) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-async function getDownloadFormats(videoUrl) {
+async function getDownloadFormats(videoUrl, playbackUrls = []) {
   if (!videoUrl || !/^https:\/\/www\.youtube\.com\/watch\?/.test(videoUrl)) {
     throw new Error('URL YouTube ไม่ถูกต้อง');
   }
-  const response = await fetch(videoUrl, { credentials: 'include' });
-  if (!response.ok) throw new Error(`โหลดข้อมูลวิดีโอไม่สำเร็จ (${response.status})`);
-  const html = await response.text();
-  const player = extractPlayerResponse(html);
-  const formats = [...(player?.streamingData?.formats || [])]
-    .filter(f => f.url && /^video\/mp4(?:;|$)/.test(f.mimeType || '') && f.hasAudio !== false)
-    .map(f => ({
-      itag: f.itag,
-      url: f.url,
-      qualityLabel: f.qualityLabel || `${f.height || 0}p`,
-      height: Number(f.height || 0),
-      fps: Number(f.fps || 0),
-      contentLength: Number(f.contentLength || 0)
-    }));
+
+  const direct = normalizePlaybackUrls(playbackUrls)
+    .map(parsePlaybackFormat)
+    .filter(Boolean);
+  const directFormats = uniqueFormats(direct);
+
+  let title = 'YouTube Video';
+  try {
+    const response = await fetch(videoUrl, { credentials: 'include' });
+    if (response.ok) {
+      const html = await response.text();
+      const player = extractPlayerResponse(html);
+      title = player.videoDetails?.title || title;
+      const formats = [...(player?.streamingData?.formats || [])]
+        .filter(f => f.url && /^video\/mp4(?:;|$)/.test(f.mimeType || '') && f.hasAudio !== false)
+        .map(f => ({
+          itag: f.itag,
+          url: f.url,
+          qualityLabel: f.qualityLabel || `${f.height || 0}p`,
+          height: Number(f.height || 0),
+          fps: Number(f.fps || 0),
+          contentLength: Number(f.contentLength || 0)
+        }));
+      return { ok: true, title, formats: uniqueFormats(formats.concat(directFormats)).slice(0, 8) };
+    }
+  } catch (_) {}
+
+  return { ok: true, title, formats: directFormats.slice(0, 8) };
+}
+
+function normalizePlaybackUrls(urls) {
+  return [...new Set((Array.isArray(urls) ? urls : []).filter(url => {
+    try {
+      const u = new URL(url);
+      return u.protocol === 'https:' && /(^|\.)googlevideo\.com$/.test(u.hostname) && u.pathname.includes('/videoplayback');
+    } catch (_) { return false; }
+  }))];
+}
+
+function parsePlaybackFormat(url) {
+  try {
+    const u = new URL(url);
+    const mime = u.searchParams.get('mime') || '';
+    if (!mime.startsWith('video/mp4')) return null;
+    const itag = Number(u.searchParams.get('itag') || 0);
+    const height = Number(u.searchParams.get('height') || 0);
+    const fps = Number(u.searchParams.get('fps') || 0);
+    const contentLength = Number(u.searchParams.get('clen') || 0);
+    for (const key of ['range', 'rn', 'rbuf', 'alr']) u.searchParams.delete(key);
+    return {
+      itag,
+      url: u.toString(),
+      qualityLabel: height ? `${height}p` : (itag ? `itag ${itag}` : 'Video'),
+      height,
+      fps,
+      contentLength
+    };
+  } catch (_) { return null; }
+}
+
+function uniqueFormats(formats) {
   const unique = [];
   for (const item of formats.sort((a, b) => b.height - a.height || b.fps - a.fps)) {
-    if (!unique.some(x => x.height === item.height && x.fps === item.fps)) unique.push(item);
+    const key = item.height ? `${item.height}:${item.fps}` : item.url;
+    if (!unique.some(x => (x.height ? `${x.height}:${x.fps}` : x.url) === key)) unique.push(item);
   }
-  return {
-    ok: true,
-    title: player.videoDetails?.title || 'YouTube Video',
-    formats: unique.slice(0, 8)
-  };
+  return unique;
 }
 
 async function startDownload(url, filename) {
-  if (!url || !/^https?:\/\//.test(url)) throw new Error('Download URL ไม่ถูกต้อง');
+  if (!url || !/^https?:\/\/(?:[^/]+\.)?googlevideo\.com\//.test(url)) {
+    throw new Error('Download URL จากสตรีมวิดีโอไม่ถูกต้อง');
+  }
   const id = await chrome.downloads.download({
     url,
     filename: sanitizeFilename(filename || 'youtube-video.mp4'),
