@@ -59,3 +59,9 @@
 
 
 
+
+## 6178c46 — Add YouTube Download button
+- Added one Download button to the YouTube player controls.
+- The button attempts to invoke YouTube's native Download control when available.
+- Verified `content.js`, `background.js`, and `popup.js` syntax successfully.
+- Push: SUCCESS — main → origin/main
