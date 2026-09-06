@@ -30,3 +30,11 @@
 - Simplified `content.js` and corrected visible Thai error messages to UTF-8.
 - Moved the duplicate legacy implementation to `adblock/ad_blocker_legacy.js`; it is not loaded by the manifest.
 - Push: SUCCESS — main → origin/main
+
+## 5ecb6d3 — Single speed button and real DNR toggle
+- Changed the YouTube Playback Speed UI to one button that cycles through supported speeds.
+- Prevented duplicate speed controls when YouTube SPA rebuilds the player controls.
+- Connected the Ad Blocker toggle to the real `ad_block_rules` DNR ruleset.
+- Added DNR status reporting to the Control Center and preserved the saved toggle state across extension updates/startup.
+- Verified JavaScript syntax and `rules.json` JSON validity.
+- Push: SUCCESS — main → origin/main
