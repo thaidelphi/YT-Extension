@@ -197,3 +197,13 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 ตรวจสอบจากอาการและโค้ดพบว่า signed playback URL ของ googlevideo ไม่สามารถนำไปใช้ผ่าน chrome.downloads ได้อย่างเสถียร และการดาวน์โหลดตรงอาจตอบกลับ 403/text แทน media
 จึงเปลี่ยนระบบ Download ของ Extension ให้ใช้ `HTMLMediaElement.captureStream()` + `MediaRecorder` บันทึกการเล่นวิดีโอปัจจุบัน แล้วสร้างไฟล์ WebM ให้ผู้ใช้ดาวน์โหลดโดยตรงผ่าน browser แทนการส่ง signed stream URL ไปยัง Downloads API
 ระบบใหม่ไม่ใช้เมนู Download ของ YouTube และไม่แกะ/ข้าม DRM
+
+## 2026-09-06 — เก็บเทคนิค Media Recording สำหรับระบบอื่น
+
+### Prompt จากผู้ใช้
+แต่เก็บวิธีนั้นไว้ก่อนเผื่อเอาใช้กับระบบอื่น เขียนเทคนิดใส่ไฟล์ .md ให้ก่อน
+
+### คำตอบ / ผลการดำเนินงาน
+สร้าง `docs/media_recording_download_technique.md` เพื่อเก็บเทคนิค `captureStream()` + `MediaRecorder` สำหรับงานระบบอื่น โดยอธิบายลำดับการทำงาน ตัวอย่างโค้ด ข้อดี ข้อจำกัด การเลือก MIME type การจัดการ error และแนวทาง UX แบบ Record → Stop → Save
+
+ระบุชัดเจนว่าเทคนิคนี้เป็น recording-based download ไม่ใช่ file downloader และไม่ควรใช้เพื่อหลบ DRM หรือระบบป้องกันเนื้อหา
