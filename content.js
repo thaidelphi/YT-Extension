@@ -32,7 +32,7 @@
     speedButton.title = 'Playback speed';
     speedButton.setAttribute('aria-label', 'Playback speed');
     speedButton.setAttribute('aria-expanded', 'false');
-    speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
+    speedButton.innerHTML = '<span class="yt-speed-value">1ร—</span>';
 
     speedMenu = document.createElement('div');
     speedMenu.className = 'yt-speed-menu';
@@ -42,7 +42,7 @@
       item.type = 'button';
       item.className = 'yt-speed-option';
       item.dataset.rate = String(rate);
-      item.textContent = `${rate}×`;
+      item.textContent = `${rate}ร—`;
       item.setAttribute('role', 'menuitem');
       item.addEventListener('click', () => setPlaybackRate(rate));
       speedMenu.appendChild(item);
@@ -80,7 +80,7 @@
     if (!speedButton) return;
     const value = Number(rate) || 1;
     const label = Number.isInteger(value) ? String(value) : String(value).replace(/0$/, '');
-    speedButton.querySelector('.yt-speed-value').textContent = `${label}×`;
+    speedButton.querySelector('.yt-speed-value').textContent = `${label}ร—`;
   }
 
   function syncPlaybackRate() {
@@ -104,11 +104,11 @@
     el.classList.add('yt-dr-loading');
     try {
       const result = await chrome.runtime.sendMessage({ type: 'TOGGLE_DISLIKE', videoId });
-      if (!result?.ok) throw new Error(result?.error || 'เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธชเนเธ Dislike เนเธ”เน');
+      if (!result?.ok) throw new Error(result?.error || 'เน€เธยเน€เธเธเน€เธยเน€เธเธเน€เธเธ’เน€เธเธเน€เธเธ’เน€เธเธเน€เธโ€“เน€เธเธเน€เธยเน€เธย Dislike เน€เธยเน€เธโ€เน€เธย');
       updateButton(result.rating);
     } catch (error) {
       console.error('[YT Dislike]', error);
-      showError(error.message || 'เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”');
+      showError(error.message || 'เน€เธโฌเน€เธยเน€เธเธ”เน€เธโ€เน€เธยเน€เธยเน€เธเธเน€เธยเน€เธเธ”เน€เธโ€เน€เธยเน€เธเธ…เน€เธเธ’เน€เธโ€');
     } finally {
       el.disabled = false;
       el.classList.remove('yt-dr-loading');
@@ -131,57 +131,6 @@
     button?.setAttribute('data-error', message);
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(() => button?.removeAttribute('data-error'), 5000);
-  }
-
-  function skipAd() {
-    const skipButton = document.querySelector(
-      '.ytp-ad-skip-button, .ytp-ad-skip-button-modern, button.ytp-ad-skip-button-modern'
-    );
-    if (skipButton && !skipButton.disabled) {
-      skipButton.click();
-      return true;
-    }
-    return false;
-  }
-
-  function closeAdOverlay() {
-    const closeButton = document.querySelector(
-      '.ytp-ad-overlay-close-button, .ytp-ad-overlay-close-button-modern'
-    );
-    if (closeButton) {
-      closeButton.click();
-      return true;
-    }
-    return false;
-  }
-
-  function hideAdVisuals() {
-    document.querySelectorAll(
-      '.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-overlay-slot, .ytp-ad-text-overlay, .ytp-ad-player-overlay, .ytp-ad-image-overlay, .ytp-ad-message-container'
-    ).forEach(el => {
-      el.style.setProperty('display', 'none', 'important');
-      el.style.setProperty('visibility', 'hidden', 'important');
-      el.setAttribute('data-yt-dr-ad-hidden', 'true');
-    });
-  }
-
-  function resetAdVisuals() {
-    document.querySelectorAll('[data-yt-dr-ad-hidden]').forEach(el => {
-      el.style.removeProperty('display');
-      el.style.removeProperty('visibility');
-      el.removeAttribute('data-yt-dr-ad-hidden');
-    });
-  }
-
-  function handleAd() {
-    const adShowing = document.querySelector('.ad-showing, .ad-interrupting');
-    if (!adShowing) {
-      resetAdVisuals();
-      return;
-    }
-    skipAd();
-    closeAdOverlay();
-    hideAdVisuals();
   }
 
   function mount() {

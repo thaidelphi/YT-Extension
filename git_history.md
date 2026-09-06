@@ -29,3 +29,9 @@
 - Commit: `86eb3dd`
 - Change: Added automatic detection of YouTube ad states, automatic click of available Skip Ad buttons, automatic closing of ad overlays, and decoupled ad handling from the other player controls for better SPA stability.
 - Push: SUCCESS — `main` → `origin/main`
+
+## e330bde � Refactor YouTube ad blocker into detection engine
+- Added multi-signal YouTube Ad Detection Engine.
+- Added SPA navigation bridge and separated ad engine files.
+- Push: main  origin/main (success).
+
