@@ -117,3 +117,10 @@
 - Kept the direct-stream-only and no DRM/signature bypass boundary.
 - Commit: `3f345b8`
 - Push: SUCCESS โ€” main โ’ origin/main
+
+## 394219e — Fix offscreen download status handshake
+- Fixed Downloader UI hanging at กำลังเชื่อมต่อสตรีม... by returning the Offscreen download job ID immediately instead of waiting for the entire download request.
+- Progress/error/completion messages can now reach content.js while the download is running.
+- Validation: JavaScript, manifest JSON and git diff check OK.
+- Push: SUCCESS — main  origin/main
+
