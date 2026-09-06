@@ -88,6 +88,16 @@
     if (video) updateSpeedControl(video.playbackRate);
   }
 
+  async function applyDefaultSpeed() {
+    const data = await chrome.storage.local.get(['defaultSpeed']);
+    const rate = Number(data.defaultSpeed || 1);
+    const video = document.querySelector('video.html5-main-video, video');
+    if (video && Number.isFinite(rate)) {
+      video.playbackRate = rate;
+      updateSpeedControl(rate);
+    }
+  }
+
   function updateButton(rating) {
     if (!button) return;
     const active = rating === 'dislike';
@@ -155,6 +165,7 @@
     if (videoId && videoId !== lastVideoId) {
       lastVideoId = videoId;
       updateButton('none');
+      applyDefaultSpeed();
       refreshRating(videoId);
     }
   }

@@ -3,10 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>YouTube Dislike Settings</title>
+  <title>YouTube Extension Control Center</title>
   <style>
-    body { width: 340px; margin: 0; padding: 18px; font: 14px Arial,sans-serif; color: #202124; }
-    h1 { font-size: 18px; margin: 0 0 14px; }
+    body { width: 380px; margin: 0; padding: 16px; font: 13px Arial,sans-serif; color: #202124; }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    .subtitle { color:#5f6368; margin-bottom:14px; }
+    section { border:1px solid #e1e3e6; border-radius:12px; padding:12px; margin-top:10px; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .title { font-weight:700; }
+    .desc { color:#5f6368; font-size:12px; line-height:1.45; margin-top:4px; }
+    .badge { font-size:11px; padding:4px 8px; border-radius:20px; background:#f1f3f4; white-space:nowrap; }
+    .badge.on { background:#e6f4ea; color:#137333; }
+    .badge.off { color:#5f6368; }
+    .switch { position:relative; width:42px; height:24px; flex:0 0 auto; }
+    .switch input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; inset:0; border-radius:20px; background:#bdc1c6; cursor:pointer; }
+    .slider:before { content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+    input:checked + .slider { background:#1a73e8; }
+    input:checked + .slider:before { transform:translateX(18px); }
     label { display:block; font-weight:600; margin: 12px 0 6px; }
     input { box-sizing:border-box; width:100%; padding:9px; border:1px solid #dadce0; border-radius:8px; }
     button { margin-top:10px; padding:9px 13px; border:0; border-radius:8px; cursor:pointer; }
@@ -19,14 +33,38 @@
   </style>
 </head>
 <body>
-  <h1>YouTube Dislike</h1>
-  <label for="clientId">Google OAuth Client ID</label>
+  <h1>YouTube Extension</h1>
+  <div class="subtitle">Control Center</div>
+
+  <section>
+    <div class="row">
+      <div><div class="title">🛑 Ad Blocker</div><div class="desc">Ad Detection Engine แบบหลายชั้น</div></div>
+      <div class="row"><span id="adBadge" class="badge">ตรวจสอบ</span><label class="switch"><input id="adEnabled" type="checkbox"><span class="slider"></span></label></div>
+    </div>
+    <div id="engineInfo" class="desc">Engine: กำลังตรวจสอบสถานะ</div>
+  </section>
+
+  <section>
+    <div class="title">⚡ Playback Speed</div>
+    <div class="desc">กำหนดความเร็วเริ่มต้นของวิดีโอใหม่</div>
+    <select id="defaultSpeed" style="width:100%;margin-top:9px;padding:9px;border:1px solid #dadce0;border-radius:8px">
+      <option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option><option value="2.5">2.5×</option><option value="3">3×</option>
+    </select>
+  </section>
+
+  <section>
+    <div class="title">👎 YouTube Dislike</div>
+    <div class="desc">จัดการ Google OAuth สำหรับส่ง rating ผ่าน YouTube Data API</div>
+    <label for="clientId">Google OAuth Client ID</label>
   <input id="clientId" placeholder="xxxx.apps.googleusercontent.com">
   <button id="save">บันทึก Client ID</button>
   <button id="login">เข้าสู่ระบบ Google</button>
   <button id="logout">ออกจากระบบ</button>
-  <div id="status">กำลังตรวจสอบ...</div>
-  <small>ปุ่ม Dislike จะส่ง rating ของบัญชีคุณผ่าน YouTube Data API ไม่ได้เพิ่ม/เปลี่ยนยอด Dislike สาธารณะของ YouTube</small>
+  <div id="loginStatus" class="desc">กำลังตรวจสอบบัญชี...</div>
+  </section>
+
+  <div id="status">กำลังโหลดการตั้งค่า...</div>
+  <small>Dislike ใช้ OAuth ของบัญชีที่คุณเลือก และไม่ได้เปลี่ยนยอด Dislike สาธารณะของ YouTube</small>
   <script src="popup.js"></script>
 </body>
 </html>

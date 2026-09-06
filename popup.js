@@ -1,10 +1,15 @@
 const clientIdInput = document.getElementById('clientId');
 const status = document.getElementById('status');
+const adEnabled = document.getElementById('adEnabled');
+const adBadge = document.getElementById('adBadge');
+const engineInfo = document.getElementById('engineInfo');
+const defaultSpeed = document.getElementById('defaultSpeed');
+const loginStatus = document.getElementById('loginStatus');
 const buttons = [...document.querySelectorAll('button')];
 
-async function send(type) {
+async function send(type, payload = {}) {
   try {
-    const result = await chrome.runtime.sendMessage({ type });
+    const result = await chrome.runtime.sendMessage({ type, ...payload });
     if (!result?.ok) throw new Error(result?.error || 'เกิดข้อผิดพลาด');
     return result;
   } catch (error) {
@@ -22,15 +27,43 @@ function setBusy(busy) {
 }
 
 async function refresh() {
-  const data = await chrome.storage.local.get(['clientId']);
+  const data = await chrome.storage.local.get(['clientId', 'adBlockEnabled', 'defaultSpeed']);
   clientIdInput.value = data.clientId || '';
+  adEnabled.checked = data.adBlockEnabled !== false;
+  defaultSpeed.value = String(data.defaultSpeed || 1);
+  updateAdBadge(adEnabled.checked);
   try {
     const result = await send('STATUS');
-    setStatus(result.loggedIn ? 'สถานะ: เข้าสู่ระบบแล้ว ✓' : 'สถานะ: ยังไม่ได้เข้าสู่ระบบ', result.loggedIn ? 'ok' : '');
+    loginStatus.textContent = result.loggedIn ? 'Google: เข้าสู่ระบบแล้ว ✓' : 'Google: ยังไม่ได้เข้าสู่ระบบ';
+    setStatus('การตั้งค่าพร้อมใช้งาน ✓', 'ok');
   } catch (error) {
+    loginStatus.textContent = `Google: ${error.message}`;
     setStatus(`สถานะ: ${error.message}`, 'error');
   }
 }
+
+function updateAdBadge(enabled) {
+  adBadge.textContent = enabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+  adBadge.className = `badge ${enabled ? 'on' : 'off'}`;
+  engineInfo.textContent = enabled ? 'Engine: Multi-layer scoring • threshold 3' : 'Engine: หยุดการบังคับใช้ชั่วคราว';
+}
+
+adEnabled.addEventListener('change', async () => {
+  try {
+    await send('SET_ADBLOCK', { enabled: adEnabled.checked });
+    updateAdBadge(adEnabled.checked);
+    setStatus(adEnabled.checked ? 'เปิด Ad Blocker แล้ว ✓' : 'ปิด Ad Blocker แล้ว', adEnabled.checked ? 'ok' : '');
+  } catch (error) {
+    adEnabled.checked = !adEnabled.checked;
+    setStatus(`เปลี่ยนสถานะไม่ได้: ${error.message}`, 'error');
+  }
+});
+
+defaultSpeed.addEventListener('change', async () => {
+  const value = Number(defaultSpeed.value);
+  await chrome.storage.local.set({ defaultSpeed: value });
+  setStatus(`ตั้งความเร็วเริ่มต้นเป็น ${value}× แล้ว ✓`, 'ok');
+});
 
 document.getElementById('save').addEventListener('click', async () => {
   const clientId = clientIdInput.value.trim();

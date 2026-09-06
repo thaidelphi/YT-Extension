@@ -65,21 +65,21 @@
 ### คำตอบ / ผลการดำเนินงาน
 ยกระดับระบบบล็อกโฆษณา YouTube สำหรับการใช้งานแบบ Local/Private โดยเพิ่มการตรวจจับสถานะโฆษณาแบบถี่ขึ้น, MutationObserver สำหรับการเปลี่ยนแปลงของ player, การกด Skip/ปิด overlay แบบทันทีเมื่อองค์ประกอบปรากฏ, cosmetic cleanup ที่ครอบคลุมขึ้น และเพิ่มกฎ Declarative Net Request สำหรับ endpoint/รูปแบบ URL โฆษณาที่เจาะจง โดยหลีกเลี่ยงการบล็อกโดเมน YouTube ทั้งหมดเพื่อไม่ให้กระทบการเล่นวิดีโอปกติ
 
-## 2026-09-06 � Fix Playback Speed Menu Text
+## 2026-09-06 � Fix Playback Speed Menu Text
 
-### Prompt �ҡ�����
-��Ѻ��������/Ŵ ������������ ��ͤ����ѹ�š
+### Prompt �ҡ�����
+��Ѻ��������/Ŵ ������������ ��ͤ����ѹ�š
 
-### �ӵͺ / �š�ô��Թ�ҹ
-���ͤ��� Playback Speed ����ʴ��Դ encoding �ҡ × �� ? 㹻��������¡�ä������� �������������͡�������� 2.5? ��� 3?
+### �ӵͺ / �š�ô��Թ�ҹ
+���ͤ��� Playback Speed ����ʴ��Դ encoding �ҡ × �� ? 㹻��������¡�ä������� �������������͡�������� 2.5? ��� 3?
 
-## 2026-09-06 � Multi-layer Ad Detection Engine
+## 2026-09-06 � Multi-layer Ad Detection Engine
 
 ### User Prompt
-��Ѻ�ç���ҧ����� Engine ��������к���Ǩ�Ѻ���ª�� ���Ш��Ѻ��͡Ѻ�������¹�ŧ�ͧ YouTube ��
+��Ѻ�ç���ҧ����� Engine ��������к���Ǩ�Ѻ���ª�� ���Ш��Ѻ��͡Ѻ�������¹�ŧ�ͧ YouTube ��
 
 ### AI Result
-��Ѻ�ç���ҧ�к� Ad Blocker �� YouTube Ad Detection Engine �¡� adblock/ad_engine.js ������õ�Ǩ�Ѻ�����ѭ�ҳ�ҡ player state, DOM ad modules/overlays, Skip/Close controls, MutationObserver ��� polling ����� bridge ����Ѻ SPA navigation ������¤����Ѻ�Դ�ͺ��ҹ�ɳ��͡�ҡ content.js.
+��Ѻ�ç���ҧ�к� Ad Blocker �� YouTube Ad Detection Engine �¡� adblock/ad_engine.js ������õ�Ǩ�Ѻ�����ѭ�ҳ�ҡ player state, DOM ad modules/overlays, Skip/Close controls, MutationObserver ��� polling ����� bridge ����Ѻ SPA navigation ������¤����Ѻ�Դ�ͺ��ҹ�ɳ��͡�ҡ content.js.
 
 
 ## 2026-09-06 — Ad Detection Scoring Engine
@@ -89,3 +89,11 @@
 
 ### AI Result
 เพิ่มระบบ Ad Detection Scoring Engine ให้แต่ละสัญญาณมีน้ำหนักคะแนน และใช้ threshold รวมในการตัดสินว่าเป็นโฆษณา แทนการพึ่งสัญญาณเดียว โดยยังคง DOM detection, player state, Skip/Close detection, MutationObserver และ polling ไว้เป็นหลายชั้น
+
+## 2026-09-06 — Redesign Popup as Control Center
+
+### User Prompt
+ตกลง
+
+### AI Result
+ปรับ Popup จากหน้า YouTube Dislike Settings เป็น YouTube Extension Control Center รวมการควบคุม Ad Blocker, Playback Speed และ Google OAuth/Dislike ไว้ในหน้าเดียว พร้อมเพิ่มสวิตช์เปิด-ปิด Ad Blocker และค่า Playback Speed เริ่มต้น

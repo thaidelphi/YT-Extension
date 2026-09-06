@@ -14,3 +14,11 @@
 - Fixed Playback Speed labels to use the × symbol.
 - Added multi-signal scoring and detection threshold to the YouTube Ad Engine.
 - Push: SUCCESS — main → origin/main
+
+## 2f21b94 — Redesign popup as YouTube control center
+- Redesigned popup as a unified Control Center.
+- Added Ad Blocker enable/disable control and engine status.
+- Added default Playback Speed setting.
+- Kept Google OAuth and YouTube Dislike controls in the same dashboard.
+- Added persistent Ad Blocker and default speed settings.
+- Push: PENDING

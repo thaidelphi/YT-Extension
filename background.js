@@ -17,6 +17,7 @@ async function handleMessage(message) {
     case 'LOGIN': await login(); return { ok: true };
     case 'LOGOUT': await logout(); return { ok: true };
     case 'STATUS': return { ok: true, loggedIn: !!(await getAccessToken(false)) };
+    case 'SET_ADBLOCK': await chrome.storage.local.set({ adBlockEnabled: message.enabled !== false }); return { ok: true };
     default: throw new Error('ไม่รู้จักคำสั่งจาก Extension');
   }
 }

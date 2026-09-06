@@ -2,6 +2,7 @@
   'use strict';
 
   const HIDDEN_ATTR = 'data-yt-dr-engine-hidden';
+  let enabled = true;
   const state = { detected: false, score: 0, signals: new Set(), lastAction: 0 };
   const SCORE = {
     'ad-showing': 5, 'ad-interrupting': 5, 'player-ad-showing': 5,
@@ -66,7 +67,26 @@
       el.style.removeProperty('pointer-events'); el.removeAttribute(HIDDEN_ATTR);
     });
   }
-  function enforce() { if (detect()) clean(); else restore(); }
+  function enforce() {
+    if (!enabled) {
+      state.detected = false;
+      state.score = 0;
+      state.signals = new Set();
+      restore();
+      return;
+    }
+    if (detect()) clean(); else restore();
+  }
+
+  chrome.storage.local.get(['adBlockEnabled']).then(data => {
+    enabled = data.adBlockEnabled !== false;
+    enforce();
+  });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !changes.adBlockEnabled) return;
+    enabled = changes.adBlockEnabled.newValue !== false;
+    enforce();
+  });
 
   window.YTAdEngine = Object.freeze({
     getState: () => ({ detected: state.detected, score: state.score, threshold: DETECT_THRESHOLD, signals: [...state.signals] }),
