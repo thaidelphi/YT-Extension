@@ -108,3 +108,12 @@
 - Validation: content.js, background.js, manifest.json OK.
 - Commit: 27fb5d7; Push: SUCCESS � main  origin/main
 
+
+
+## 2026-09-06 — 3f345b8 — Fix downloader HTTP 403 with offscreen fetch
+- Moved custom stream fetching out of the YouTube page content script into an Extension Offscreen Document.
+- Added `offscreen` permission and new `offscreen.html` / `offscreen.js` download worker.
+- Added job-based progress/error reporting back to the content script.
+- Kept the direct-stream-only and no DRM/signature bypass boundary.
+- Commit: `3f345b8`
+- Push: SUCCESS — main → origin/main
