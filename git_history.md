@@ -80,3 +80,10 @@
 - Validation: JavaScript and manifest JSON OK.
 - Commit: a41ad7f
 - Push: SUCCESS � main  origin/main
+
+## 3e55fd7 — Fix custom downloader text response handling
+- Preserved the original signed Googlevideo playback URL query parameters instead of stripping `range/rn/rbuf/alr`.
+- Added an HTTP Range probe and Content-Type validation before starting a download.
+- Added YouTube Referer header to the Chrome download request.
+- Prevented text/error responses from being saved as apparent video files.
+- Push: SUCCESS — main → origin/main
