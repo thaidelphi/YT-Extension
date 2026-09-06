@@ -1,0 +1,45 @@
+.yt-dr-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 18px;
+  color: var(--yt-spec-text-primary, #0f0f0f);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 6px;
+  height: 36px;
+  margin-left: 6px;
+  padding: 0 14px;
+  position: relative;
+  transition: background-color .15s ease, opacity .15s ease;
+}
+.yt-dr-button:hover { background: var(--yt-spec-badge-chip-background, #f2f2f2); }
+.yt-dr-button:focus-visible { outline: 2px solid #065fd4; outline-offset: 2px; }
+.yt-dr-button:disabled { cursor: wait; opacity: .55; }
+.yt-dr-button.yt-dr-active { font-weight: 600; }
+.yt-dr-button.yt-dr-active .yt-dr-icon { fill: currentColor; }
+.yt-dr-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.yt-dr-button.yt-dr-loading .yt-dr-icon { animation: yt-dr-spin .7s linear infinite; }
+.yt-dr-button[data-error]::after {
+  content: attr(data-error);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 9999;
+  max-width: 320px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #0f0f0f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+html[dark] .yt-dr-button { color: var(--yt-spec-text-primary, #f1f1f1); }
+html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
+@keyframes yt-dr-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .yt-dr-button { transition: none; } .yt-dr-button.yt-dr-loading .yt-dr-icon { animation: none; } }

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>YouTube Dislike Settings</title>
+  <style>
+    body { width: 340px; margin: 0; padding: 18px; font: 14px Arial,sans-serif; color: #202124; }
+    h1 { font-size: 18px; margin: 0 0 14px; }
+    label { display:block; font-weight:600; margin: 12px 0 6px; }
+    input { box-sizing:border-box; width:100%; padding:9px; border:1px solid #dadce0; border-radius:8px; }
+    button { margin-top:10px; padding:9px 13px; border:0; border-radius:8px; cursor:pointer; }
+    #save { background:#065fd4; color:#fff; } #login { background:#e8f0fe; color:#174ea6; }
+    #logout { background:#fce8e6; color:#c5221f; }
+    #status { margin-top:14px; padding:9px; border-radius:8px; background:#f8f9fa; line-height:1.5; }
+    #status.ok { background:#e6f4ea; color:#137333; } #status.error { background:#fce8e6; color:#c5221f; }
+    button:disabled { cursor:wait; opacity:.55; }
+    small { color:#5f6368; display:block; margin-top:10px; line-height:1.45; }
+  </style>
+</head>
+<body>
+  <h1>YouTube Dislike</h1>
+  <label for="clientId">Google OAuth Client ID</label>
+  <input id="clientId" placeholder="xxxx.apps.googleusercontent.com">
+  <button id="save">บันทึก Client ID</button>
+  <button id="login">เข้าสู่ระบบ Google</button>
+  <button id="logout">ออกจากระบบ</button>
+  <div id="status">กำลังตรวจสอบ...</div>
+  <small>ปุ่ม Dislike จะส่ง rating ของบัญชีคุณผ่าน YouTube Data API ไม่ได้เพิ่ม/เปลี่ยนยอด Dislike สาธารณะของ YouTube</small>
+  <script src="popup.js"></script>
+</body>
+</html>

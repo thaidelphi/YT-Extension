@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Dislike Restorer",
+  "version": "0.1.0",
+  "description": "Restore a YouTube Dislike button that records your own rating via the official YouTube Data API.",
+  "permissions": ["identity", "storage"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://oauth2.googleapis.com/*",
+    "https://www.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "YouTube Dislike Settings",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
