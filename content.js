@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   let lastVideoId = null;
   let button = null;
   let speedButton = null;
@@ -157,8 +157,7 @@
 
   function hideAdVisuals() {
     document.querySelectorAll(
-      '.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-overlay-slot, .ytp-ad-text-overlay,
-       .ytp-ad-player-overlay, .ytp-ad-image-overlay, .ytp-ad-message-container'
+      '.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-overlay-slot, .ytp-ad-text-overlay, .ytp-ad-player-overlay, .ytp-ad-image-overlay, .ytp-ad-message-container'
     ).forEach(el => {
       el.style.setProperty('display', 'none', 'important');
       el.style.setProperty('visibility', 'hidden', 'important');

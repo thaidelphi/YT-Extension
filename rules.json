@@ -1,56 +1,14 @@
 [
-  {
-    "id": 1,
-    "priority": 100,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||doubleclick.net^",
-      "resourceTypes": ["script", "image", "xmlhttprequest", "media", "sub_frame"]
-    }
-  },
-  {
-    "id": 2,
-    "priority": 100,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||googleadservices.com^",
-      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame"]
-    }
-  },
-  {
-    "id": 3,
-    "priority": 100,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||googlesyndication.com^",
-      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame"]
-    }
-  },
-  {
-    "id": 4,
-    "priority": 90,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||pagead2.googlesyndication.com^",
-      "resourceTypes": ["script", "image", "xmlhttprequest", "media", "sub_frame"]
-    }
-  },
-  {
-    "id": 5,
-    "priority": 90,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||googleads.g.doubleclick.net^",
-      "resourceTypes": ["script", "image", "xmlhttprequest", "media", "sub_frame"]
-    }
-  },
-  {
-    "id": 6,
-    "priority": 90,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||ads.google.com^",
-      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame"]
-    }
-  }
+  {"id":1,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||doubleclick.net^","resourceTypes":["script","image","xmlhttprequest","media","sub_frame"]}},
+  {"id":2,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||googleadservices.com^","resourceTypes":["script","image","xmlhttprequest","sub_frame"]}},
+  {"id":3,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||googlesyndication.com^","resourceTypes":["script","image","xmlhttprequest","sub_frame"]}},
+  {"id":4,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||pagead2.googlesyndication.com^","resourceTypes":["script","image","xmlhttprequest","media","sub_frame"]}},
+  {"id":5,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||googleads.g.doubleclick.net^","resourceTypes":["script","image","xmlhttprequest","media","sub_frame"]}},
+  {"id":6,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||ads.google.com^","resourceTypes":["script","image","xmlhttprequest","sub_frame"]}},
+  {"id":7,"priority":110,"action":{"type":"block"},"condition":{"urlFilter":"||youtube.com/pagead^","resourceTypes":["script","xmlhttprequest","sub_frame"]}},
+  {"id":8,"priority":110,"action":{"type":"block"},"condition":{"urlFilter":"||youtube.com/get_midroll_info^","resourceTypes":["xmlhttprequest"]}},
+  {"id":9,"priority":110,"action":{"type":"block"},"condition":{"urlFilter":"||youtube.com/api/stats/ads^","resourceTypes":["xmlhttprequest"]}},
+  {"id":10,"priority":110,"action":{"type":"block"},"condition":{"urlFilter":"||youtube.com/ptracking^","resourceTypes":["xmlhttprequest"]}},
+  {"id":11,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||ad.doubleclick.net^","resourceTypes":["script","image","xmlhttprequest","media","sub_frame"]}},
+  {"id":12,"priority":100,"action":{"type":"block"},"condition":{"urlFilter":"||securepubads.g.doubleclick.net^","resourceTypes":["script","xmlhttprequest","sub_frame"]}}
 ]
