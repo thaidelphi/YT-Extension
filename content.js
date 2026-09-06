@@ -155,17 +155,34 @@
     return false;
   }
 
-  function handleAd() {
-    const adShowing = document.querySelector('.ad-showing, .ad-interrupting');
-    if (!adShowing) return;
-    skipAd();
-    closeAdOverlay();
-
+  function hideAdVisuals() {
     document.querySelectorAll(
-      '.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-overlay-slot, .ytp-ad-text-overlay'
+      '.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-overlay-slot, .ytp-ad-text-overlay,
+       .ytp-ad-player-overlay, .ytp-ad-image-overlay, .ytp-ad-message-container'
     ).forEach(el => {
       el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.setAttribute('data-yt-dr-ad-hidden', 'true');
     });
+  }
+
+  function resetAdVisuals() {
+    document.querySelectorAll('[data-yt-dr-ad-hidden]').forEach(el => {
+      el.style.removeProperty('display');
+      el.style.removeProperty('visibility');
+      el.removeAttribute('data-yt-dr-ad-hidden');
+    });
+  }
+
+  function handleAd() {
+    const adShowing = document.querySelector('.ad-showing, .ad-interrupting');
+    if (!adShowing) {
+      resetAdVisuals();
+      return;
+    }
+    skipAd();
+    closeAdOverlay();
+    hideAdVisuals();
   }
 
   function mount() {
@@ -215,3 +232,4 @@
   setInterval(() => { scheduleMount(); handleAd(); }, 1000);
   scheduleMount();
 })();
+
