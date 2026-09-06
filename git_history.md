@@ -65,3 +65,10 @@
 - The button attempts to invoke YouTube's native Download control when available.
 - Verified `content.js`, `background.js`, and `popup.js` syntax successfully.
 - Push: SUCCESS — main → origin/main
+
+## c3857d2 — Build custom YouTube download system
+- Replaced the YouTube native Download launcher with an Extension-owned download workflow.
+- Added direct MP4 stream discovery, quality/FPS selection and Chrome Downloads API integration.
+- Added `downloads` permission and custom download menu styling.
+- Restricted the implementation to directly exposed stream URLs; no signatureCipher/DRM bypass.
+- Push: SUCCESS — main → origin/main
