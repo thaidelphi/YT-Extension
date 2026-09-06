@@ -97,3 +97,16 @@
 
 ### AI Result
 ปรับ Popup จากหน้า YouTube Dislike Settings เป็น YouTube Extension Control Center รวมการควบคุม Ad Blocker, Playback Speed และ Google OAuth/Dislike ไว้ในหน้าเดียว พร้อมเพิ่มสวิตช์เปิด-ปิด Ad Blocker และค่า Playback Speed เริ่มต้น
+
+
+## 2026-09-06 — Engine Performance & Code Cleanup
+
+### Prompt จากผู้ใช้
+ปรับปรุง
+
+### คำตอบ / ผลการดำเนินงาน
+ปรับปรุงโครงสร้าง YT-Extension ตามผลสำรวจ โดยยกระดับ `adblock/ad_engine.js` ให้เป็น Engine หลักแบบ scheduled/debounced ลดการเรียกตรวจจับซ้ำจาก MutationObserver และลด polling จาก 150ms เป็น fallback 500ms พร้อมคง multi-signal scoring, threshold, Auto Skip และ Auto Close ไว้
+
+ปรับ `content.js` ให้โค้ด UI/Dislike/Playback Speed แยกจากระบบโฆษณาชัดเจนขึ้น และแก้ข้อความ error ภาษาไทยที่มีปัญหา encoding ให้เป็น UTF-8 ที่อ่านได้ปกติ รวมถึงปรับการจัดการ Playback Speed ให้กระชับขึ้น
+
+ย้าย `ad_blocker.js` เดิมออกจาก root ไปเป็น `adblock/ad_blocker_legacy.js` เพื่อไม่ให้สับสนกับ Engine หลัก โดยไม่โหลดไฟล์ legacy ผ่าน manifest
