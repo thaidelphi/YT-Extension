@@ -43,3 +43,56 @@ html[dark] .yt-dr-button { color: var(--yt-spec-text-primary, #f1f1f1); }
 html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
 @keyframes yt-dr-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .yt-dr-button { transition: none; } .yt-dr-button.yt-dr-loading .yt-dr-icon { animation: none; } }
+
+/* Quick playback speed control */
+.yt-speed-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  z-index: 100;
+}
+.yt-speed-button {
+  min-width: 42px;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: 500 13px Roboto, Arial, sans-serif;
+}
+.yt-speed-button:hover,
+.yt-speed-control.yt-speed-open .yt-speed-button {
+  background: rgba(255,255,255,.18);
+}
+.yt-speed-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+.yt-speed-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 42px;
+  min-width: 92px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(28,28,28,.98);
+  box-shadow: 0 4px 18px rgba(0,0,0,.45);
+}
+.yt-speed-control.yt-speed-open .yt-speed-menu { display: flex; flex-direction: column; }
+.yt-speed-option {
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px 12px;
+  text-align: left;
+  font: 400 13px Roboto, Arial, sans-serif;
+}
+.yt-speed-option:hover,
+.yt-speed-option.yt-speed-selected { background: rgba(255,255,255,.18); }
+.yt-speed-option.yt-speed-selected { font-weight: 600; }

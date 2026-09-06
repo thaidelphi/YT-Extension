@@ -1,6 +1,8 @@
 (() => {
   let lastVideoId = null;
   let button = null;
+  let speedButton = null;
+  let speedMenu = null;
   let refreshTimer = null;
   let mountScheduled = false;
 
@@ -17,6 +19,73 @@
     el.innerHTML = '<svg class="yt-dr-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 10V21H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Zm2 0h6.7c1.2 0 2.1 1.1 1.8 2.3l-1.2 5.1A3 3 0 0 1 15.4 20H11V10Zm0-1.5V4.2A2.2 2.2 0 0 1 13.2 2c.9 0 1.6.7 1.6 1.6v1.1c0 .9-.2 1.7-.6 2.5L13 8.5H11Z"/></svg><span>Dislike</span>';
     el.addEventListener('click', () => toggleDislike(el));
     return el;
+  }
+
+  function createSpeedControl() {
+    const wrap = document.createElement('div');
+    wrap.id = 'yt-speed-control';
+    wrap.className = 'yt-speed-control';
+
+    speedButton = document.createElement('button');
+    speedButton.type = 'button';
+    speedButton.className = 'yt-speed-button';
+    speedButton.title = 'Playback speed';
+    speedButton.setAttribute('aria-label', 'Playback speed');
+    speedButton.setAttribute('aria-expanded', 'false');
+    speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
+
+    speedMenu = document.createElement('div');
+    speedMenu.className = 'yt-speed-menu';
+    speedMenu.setAttribute('role', 'menu');
+    [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].forEach(rate => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'yt-speed-option';
+      item.dataset.rate = String(rate);
+      item.textContent = `${rate}×`;
+      item.setAttribute('role', 'menuitem');
+      item.addEventListener('click', () => setPlaybackRate(rate));
+      speedMenu.appendChild(item);
+    });
+
+    speedButton.addEventListener('click', event => {
+      event.stopPropagation();
+      const open = wrap.classList.toggle('yt-speed-open');
+      speedButton.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', event => {
+      if (!wrap.contains(event.target)) {
+        wrap.classList.remove('yt-speed-open');
+        speedButton.setAttribute('aria-expanded', 'false');
+      }
+    }, true);
+
+    wrap.append(speedButton, speedMenu);
+    return wrap;
+  }
+
+  function setPlaybackRate(rate) {
+    const video = document.querySelector('video.html5-main-video, video');
+    if (!video) return;
+    video.playbackRate = rate;
+    updateSpeedControl(rate);
+    speedMenu?.querySelectorAll('.yt-speed-option').forEach(item => {
+      item.classList.toggle('yt-speed-selected', Number(item.dataset.rate) === rate);
+    });
+    speedButton?.parentElement.classList.remove('yt-speed-open');
+    speedButton?.setAttribute('aria-expanded', 'false');
+  }
+
+  function updateSpeedControl(rate) {
+    if (!speedButton) return;
+    const value = Number(rate) || 1;
+    const label = Number.isInteger(value) ? String(value) : String(value).replace(/0$/, '');
+    speedButton.querySelector('.yt-speed-value').textContent = `${label}×`;
+  }
+
+  function syncPlaybackRate() {
+    const video = document.querySelector('video.html5-main-video, video');
+    if (video) updateSpeedControl(video.playbackRate);
   }
 
   function updateButton(rating) {
@@ -71,6 +140,15 @@
     if (!container) return;
     if (!button || !document.contains(button)) button = createButton();
     if (!container.contains(button)) container.appendChild(button);
+
+    const playerControls = document.querySelector('.ytp-right-controls');
+    if (playerControls) {
+      if (!speedButton || !document.contains(speedButton)) {
+        playerControls.prepend(createSpeedControl());
+      }
+      syncPlaybackRate();
+    }
+
     const videoId = getVideoId();
     if (videoId && videoId !== lastVideoId) {
       lastVideoId = videoId;
@@ -90,6 +168,8 @@
   window.addEventListener('yt-navigate-finish', () => {
     lastVideoId = null;
     button = null;
+    speedButton = null;
+    speedMenu = null;
     setTimeout(scheduleMount, 100);
   });
   window.addEventListener('popstate', scheduleMount);
