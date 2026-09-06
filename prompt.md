@@ -262,3 +262,37 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 ปรับ Offscreen Document ให้ตอบรับการเริ่มงานทันที แล้วทำงานดาวน์โหลดแบบ background เพื่อไม่ให้ message ค้างรอจนดาวน์โหลดเสร็จ และเพิ่ม timeout 20 วินาทีสำหรับขั้นตอนเชื่อมต่อสตรีม เพื่อไม่ให้ UI ค้างไม่สิ้นสุด
 
 ผลที่ต้องทดสอบหลัง Reload Extension: จาก `กำลังเชื่อมต่อสตรีม...` ต้องเปลี่ยนเป็น progress หรือแสดง error จริงภายในเวลาที่เหมาะสม
+
+## 2026-09-06 — Download ยังไม่สำเร็จ
+
+### Prompt จากผู้ใช้
+[Message sent at 2026-09-06T03:49:55Z]
+download ไม่สำเจ็จ
+
+### คำตอบ / ผลการดำเนินงาน
+ปรับ Custom Download Engine เพิ่มระบบ retry สำหรับ signed playback URL โดยเมื่อดาวน์โหลดล้มเหลวจาก HTTP 403, timeout หรือ network error ระบบจะดึงข้อมูลสตรีมจาก YouTube ใหม่แบบสด แล้วเลือกสตรีมที่ตรงกับคุณภาพ/FPS เดิมก่อนลองดาวน์โหลดอีกครั้งเพียง 1 รอบ เพื่อแก้กรณี URL หมดอายุหรือ URL ที่ได้จาก player เปลี่ยนระหว่างการเล่น
+
+ปรับ download job metadata ให้เก็บ format และสถานะ retry ต่อ job เพื่อป้องกันการ retry วนซ้ำ และยังแสดงข้อความ error จริงเมื่อ retry แล้วไม่สำเร็จ
+
+เพิ่มเติมในการแก้ไขรอบเดียวกัน: ปรับรายการสตรีมให้ไม่ทิ้ง URL เพียงเพราะมี query parameter ของ playback และให้ Offscreen request ระบุ HTTP Range ตั้งแต่ต้นเพื่อให้เซิร์ฟเวอร์ media รองรับรูปแบบ progressive stream ได้มากขึ้น โดยยังคงไม่ถอดรหัสหรือข้าม DRM/signature protection
+
+
+หมายเหตุ: การแก้ไขนี้ยังอยู่ในขอบเขตการดาวน์โหลดสตรีมที่เบราว์เซอร์/เซิร์ฟเวอร์เปิดให้เข้าถึงได้โดยตรง ไม่พยายามหลบ DRM หรือระบบป้องกันเนื้อหา
+
+## 2026-09-06 — สร้าง Custom Download Engine รุ่นแข่งขัน
+
+### Prompt จากผู้ใช้
+สร้างระบบเลย
+
+### คำตอบ / ผลการดำเนินงาน
+เริ่มสร้าง Custom Download Engine รุ่นแข่งขันต่อจากระบบเดิม โดยแยก logic การดาวน์โหลดออกเป็น `download_engine.js` เพื่อให้เส้นทาง Download มี state, retry, validation และ progress ที่ชัดเจนขึ้น
+
+Engine รุ่นนี้ตรวจสอบ signed playback URL ก่อนใช้งาน, ตรวจ Content-Type, ตรวจขนาดข้อมูล, อ่าน `ReadableStream` และสร้างไฟล์จาก Blob โดยไม่ใช้ Download ของ YouTube และไม่พยายามข้าม DRM หรือระบบป้องกันเนื้อหา
+
+เพิ่ม retry สูงสุด 2 รอบสำหรับ timeout, network error และ HTTP status ที่เหมาะกับการ retry พร้อมรายงาน attempt/progress/bytes กลับไปยัง UI
+
+ปรับ `offscreen.html` ให้โหลด Engine ก่อน `offscreen.js` เพื่อให้ Offscreen Document ใช้ Engine กลางร่วมกัน และปรับ `offscreen.js` ให้ทำหน้าที่เป็น worker/orchestrator สำหรับ job และ status เท่านั้น
+
+ปรับ Stream Discovery ใน `background.js` ไม่รับ URL ที่มี query `range` เพื่อป้องกันการนำ segment ของ playback มาใช้เป็นไฟล์เดี่ยว และคง signed query parameters ของ URL ที่เหลือไว้ตามต้นฉบับ
+
+หมายเหตุด้านข้อจำกัด: ระบบนี้ยังต้องพึ่งสตรีมที่ browser/YouTube เปิดให้ Extension เข้าถึงได้โดยตรง หากปลายทางตอบ HTTP 403 หรือไม่มี progressive stream ที่เข้าถึงได้ ระบบจะไม่พยายามหลบเลี่ยงการป้องกัน แต่จะแจ้ง error และใช้ retry/fresh-stream logic ที่มีอยู่

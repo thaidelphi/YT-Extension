@@ -44,7 +44,6 @@
 - Added selected-state highlighting and automatic menu close after selection.
 - Commit/Push: pending
 
-
 ## 2026-09-06 — เพิ่มปุ่ม Download
 - Added one Download button to the YouTube player controls.
 - The button attempts to invoke YouTube's own Download control when available; it does not extract or construct stream URLs.
@@ -73,13 +72,13 @@
 - Restricted the implementation to directly exposed stream URLs; no signatureCipher/DRM bypass.
 - Push: SUCCESS — main → origin/main
 
-## 2026-09-06 � Fix custom downloader stream detection
+## 2026-09-06 � Fix custom downloader stream detection
 - Detect direct playback URLs from the active video and loaded googlevideo resources.
 - Reuse direct MP4 playback URLs when page player metadata does not expose a plain URL.
 - Added googlevideo.com host permission and delayed URL collection fallback.
 - Validation: JavaScript and manifest JSON OK.
 - Commit: a41ad7f
-- Push: SUCCESS � main  origin/main
+- Push: SUCCESS � main  origin/main
 
 ## 3e55fd7 — Fix custom downloader text response handling
 - Preserved the original signed Googlevideo playback URL query parameters instead of stripping `range/rn/rbuf/alr`.
@@ -101,12 +100,12 @@
 - Commit: `5c86ed9` — Document media recording technique
 - Push: SUCCESS — main → origin/main
 
-## 2026-09-06 � Improve Custom Download Engine
+## 2026-09-06 � Improve Custom Download Engine
 - Updated custom downloader to fetch directly from the YouTube page context when a usable progressive stream URL is available.
 - Added streamed download progress and Blob-based file save without waiting for playback to finish.
 - Filtered range/segment URLs from the download list.
 - Validation: content.js, background.js, manifest.json OK.
-- Commit: 27fb5d7; Push: SUCCESS � main  origin/main
+- Commit: 27fb5d7; Push: SUCCESS � main  origin/main
 
 
 
@@ -118,11 +117,11 @@
 - Commit: `3f345b8`
 - Push: SUCCESS — main → origin/main
 
-## 394219e � Fix offscreen download status handshake
-- Fixed Downloader UI hanging at ���ѧ��������ʵ���... by returning the Offscreen download job ID immediately instead of waiting for the entire download request.
+## 394219e � Fix offscreen download status handshake
+- Fixed Downloader UI hanging at ���ѧ��������ʵ���... by returning the Offscreen download job ID immediately instead of waiting for the entire download request.
 - Progress/error/completion messages can now reach content.js while the download is running.
 - Validation: JavaScript, manifest JSON and git diff check OK.
-- Push: SUCCESS � main  origin/main
+- Push: SUCCESS � main  origin/main
 
 
 
@@ -132,3 +131,11 @@
 - Offscreen download now acknowledges the start request immediately and performs the download asynchronously.
 - Added a 20-second connection timeout so the UI cannot remain in `กำลังเชื่อมต่อสตรีม...` forever.
 - Push: SUCCESS — main → origin/main
+
+## 2026-09-06 — Improve custom downloader retry and stream compatibility
+- Added one-time retry using a freshly discovered playback URL after HTTP 403, timeout, or network errors.
+- Preserved the selected quality/FPS when refreshing the stream list.
+- Allowed playback URLs with valid playback query parameters instead of filtering them solely because they contain range/rn/rbuf fields.
+- Started Offscreen media fetch with an HTTP Range header for better progressive-stream compatibility.
+- Commit/Push: pending
+

@@ -70,7 +70,7 @@
         playbackUrls
       });
       if (!result?.ok) throw new Error(result?.error || 'ไม่สามารถค้นหาสตรีมได้');
-      const formats = (result.formats || []).filter(item => item.url && !/[?&](?:range|rn|rbuf)=/.test(item.url));
+      const formats = (result.formats || []).filter(item => item.url && item.height);
       if (!formats.length) throw new Error('วิดีโอนี้ไม่มีสตรีมไฟล์เดี่ยวที่ดาวน์โหลดได้');
 
       menu.textContent = '';
@@ -87,7 +87,7 @@
           item.textContent = `กำลังดาวน์โหลด ${format.qualityLabel || 'Video'}... 0%`;
           try {
             const filename = `${sanitizeDownloadName(result.title)}-${format.qualityLabel || 'video'}.mp4`;
-            await startOffscreenDownload(format.url, filename, item);
+            await startOffscreenDownload(format.url, filename, item, format);
           } catch (error) {
             item.disabled = false;
             item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${error.message}`;
@@ -100,25 +100,49 @@
     }
   }
 
-  async function startOffscreenDownload(streamUrl, filename, statusItem) {
+  async function startOffscreenDownload(streamUrl, filename, statusItem, format, retried = false) {
     const result = await chrome.runtime.sendMessage({
       type: 'START_OFFSCREEN_DOWNLOAD',
       url: streamUrl,
       filename
     });
     if (!result?.ok || !result.jobId) throw new Error(result?.error || 'เริ่มดาวน์โหลดไม่ได้');
-    downloadJobs.set(result.jobId, statusItem);
+    downloadJobs.set(result.jobId, { item: statusItem, format, filename, retried });
     statusItem.textContent = 'กำลังเชื่อมต่อสตรีม...';
     chrome.runtime.sendMessage({ type: 'DOWNLOAD_JOB_READY', jobId: result.jobId }).catch(() => {});
   }
 
+  async function retryFreshDownload(meta) {
+    const result = await chrome.runtime.sendMessage({
+      type: 'GET_DOWNLOAD_FORMATS',
+      videoUrl: location.href,
+      playbackUrls: collectPlaybackUrls()
+    });
+    if (!result?.ok) throw new Error(result?.error || 'สร้าง URL สตรีมใหม่ไม่ได้');
+    const formats = (result.formats || []).filter(item => item.url && item.height);
+    const fresh = formats.find(item => item.height === meta.format.height && item.fps === meta.format.fps) ||
+      formats.find(item => item.height === meta.format.height) || formats[0];
+    if (!fresh) throw new Error('ไม่พบสตรีมใหม่สำหรับคุณภาพที่เลือก');
+    meta.item.textContent = 'กำลังสร้าง URL สตรีมใหม่...';
+    await startOffscreenDownload(fresh.url, `${sanitizeDownloadName(result.title)}-${fresh.qualityLabel || 'video'}.mp4`, meta.item, fresh, true);
+  }
+
   chrome.runtime.onMessage.addListener(message => {
     if (message?.type !== 'OFFSCREEN_DOWNLOAD_STATUS') return;
-    const item = downloadJobs.get(message.jobId);
-    if (!item) return;
+    const meta = downloadJobs.get(message.jobId);
+    if (!meta) return;
+    const item = meta.item;
 
     if (message.error) {
       downloadJobs.delete(message.jobId);
+      const retryable = /HTTP 403|หมดเวลารอเซิร์ฟเวอร์|เชื่อมต่อสตรีมไม่ได้|network|failed/i.test(message.error);
+      if (retryable && !meta.retried) {
+        retryFreshDownload(meta).catch(error => {
+          item.disabled = false;
+          item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${error.message}`;
+        });
+        return;
+      }
       item.disabled = false;
       item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${message.error}`;
       return;

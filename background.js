@@ -232,7 +232,8 @@ function normalizePlaybackUrls(urls) {
   return [...new Set((Array.isArray(urls) ? urls : []).filter(url => {
     try {
       const u = new URL(url);
-      return u.protocol === 'https:' && /(^|\.)googlevideo\.com$/.test(u.hostname) && u.pathname.includes('/videoplayback');
+      return u.protocol === 'https:' && /(^|\.)googlevideo\.com$/.test(u.hostname) &&
+        u.pathname.includes('/videoplayback') && !u.searchParams.has('range');
     } catch (_) { return false; }
   }))];
 }
