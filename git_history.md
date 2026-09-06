@@ -149,3 +149,11 @@
 - Updated `prompt.md` with the new implementation record.
 - Commit: `4250cf1`
 - Push: SUCCESS — main → origin/main
+
+## 2026-09-06 — 403 Round 1: Page-Origin Download Transport
+- Added `download_page_bridge.js` to run a direct exposed-media fetch in the YouTube page world.
+- Download button now tries the page-origin transport first, while preserving the existing Offscreen engine.
+- Added `web_accessible_resources` for the bridge script.
+- No signature, DRM, authentication, or access-control bypass was added.
+- Syntax/JSON validation: SUCCESS.
+- Commit/Push: pending.

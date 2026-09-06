@@ -87,7 +87,7 @@
           item.textContent = `กำลังดาวน์โหลด ${format.qualityLabel || 'Video'}... 0%`;
           try {
             const filename = `${sanitizeDownloadName(result.title)}-${format.qualityLabel || 'video'}.mp4`;
-            await startOffscreenDownload(format.url, filename, item, format);
+            await startPageDownload(format.url, filename, item, format);
           } catch (error) {
             item.disabled = false;
             item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${error.message}`;
@@ -98,6 +98,42 @@
     } catch (error) {
       menu.innerHTML = `<div class="yt-download-status yt-download-error">${escapeHtml(error.message)}</div>`;
     }
+  }
+
+  function installPageDownloadBridge() {
+    if (document.getElementById('yt-download-page-bridge')) return;
+    const script = document.createElement('script');
+    script.id = 'yt-download-page-bridge';
+    script.src = chrome.runtime.getURL('download_page_bridge.js');
+    script.onload = () => script.remove();
+    (document.head || document.documentElement).appendChild(script);
+  }
+
+  async function startPageDownload(streamUrl, filename, statusItem, format) {
+    installPageDownloadBridge();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const jobId = `page-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const onStatus = event => {
+      const data = event.detail || {};
+      if (data.jobId !== jobId) return;
+      if (data.error) {
+        window.removeEventListener('YT_EXTENSION_DOWNLOAD_STATUS', onStatus);
+        statusItem.disabled = false;
+        statusItem.textContent = `ดาวน์โหลดไม่สำเร็จ: ${data.error}`;
+        return;
+      }
+      if (data.done) {
+        window.removeEventListener('YT_EXTENSION_DOWNLOAD_STATUS', onStatus);
+        statusItem.disabled = false;
+        statusItem.textContent = 'ดาวน์โหลดเสร็จแล้ว ✓';
+        return;
+      }
+      if (typeof data.progress === 'number') statusItem.textContent = `กำลังดาวน์โหลด... ${data.progress}%`;
+      else if (data.bytes) statusItem.textContent = `กำลังดาวน์โหลด... ${formatBytes(data.bytes)}`;
+    };
+    window.addEventListener('YT_EXTENSION_DOWNLOAD_STATUS', onStatus);
+    window.dispatchEvent(new CustomEvent('YT_EXTENSION_DOWNLOAD', { detail: { jobId, url: streamUrl, filename } }));
+    setTimeout(() => window.removeEventListener('YT_EXTENSION_DOWNLOAD_STATUS', onStatus), 6 * 60 * 60 * 1000);
   }
 
   async function startOffscreenDownload(streamUrl, filename, statusItem, format, retried = false) {

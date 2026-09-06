@@ -5,13 +5,7 @@
   "description": "Restore YouTube Dislike and add aggressive local ad filtering.",
   "permissions": ["identity", "storage", "declarativeNetRequest", "downloads", "offscreen"],
   "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ad_block_rules",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
+    "rule_resources": [{ "id": "ad_block_rules", "enabled": true, "path": "rules.json" }]
   },
   "host_permissions": [
     "https://www.youtube.com/*",
@@ -19,20 +13,19 @@
     "https://www.googleapis.com/*",
     "https://*.googlevideo.com/*"
   ],
-  "background": {
-    "service_worker": "background.js"
-  },
+  "web_accessible_resources": [{
+    "resources": ["download_page_bridge.js"],
+    "matches": ["https://www.youtube.com/*"]
+  }],
+  "background": { "service_worker": "background.js" },
   "action": {
     "default_title": "YouTube Dislike Settings",
     "default_popup": "popup.html"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["adblock/ad_engine.js", "adblock/engine_bridge.js", "content.js"],
-      "css": ["content.css"],
-      "run_at": "document_start"
-    }
-  ]
+  "content_scripts": [{
+    "matches": ["https://www.youtube.com/*"],
+    "js": ["adblock/ad_engine.js", "adblock/engine_bridge.js", "content.js"],
+    "css": ["content.css"],
+    "run_at": "document_start"
+  }]
 }
-

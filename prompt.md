@@ -296,3 +296,10 @@ Engine รุ่นนี้ตรวจสอบ signed playback URL ก่อ�
 ปรับ Stream Discovery ใน `background.js` ไม่รับ URL ที่มี query `range` เพื่อป้องกันการนำ segment ของ playback มาใช้เป็นไฟล์เดี่ยว และคง signed query parameters ของ URL ที่เหลือไว้ตามต้นฉบับ
 
 หมายเหตุด้านข้อจำกัด: ระบบนี้ยังต้องพึ่งสตรีมที่ browser/YouTube เปิดให้ Extension เข้าถึงได้โดยตรง หากปลายทางตอบ HTTP 403 หรือไม่มี progressive stream ที่เข้าถึงได้ ระบบจะไม่พยายามหลบเลี่ยงการป้องกัน แต่จะแจ้ง error และใช้ retry/fresh-stream logic ที่มีอยู่
+
+## Download 403 Round 1
+- If Offscreen fetch of a signed googlevideo playback URL returns HTTP 403, do not attempt to bypass signatures, DRM, or access controls.
+- First recovery strategy: execute the download request in the YouTube page world through a small page bridge so browser page-origin credentials/CORS behavior can be used naturally.
+- Preserve the original signed playback URL exactly; do not strip query parameters.
+- Report HTTP status clearly and retain the Offscreen engine as an alternative transport.
+- The page bridge must only handle directly exposed media URLs and must not defeat DRM or protected-content controls.
