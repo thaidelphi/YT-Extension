@@ -117,3 +117,33 @@ html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
 }
 .yt-extension-download:hover { background: rgba(255,255,255,.18); }
 .yt-extension-download:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* Extension Download menu */
+.yt-download-control { position: relative; display: inline-flex; align-items: center; z-index: 100; }
+.yt-download-control.yt-download-open .yt-download-menu { display: flex; flex-direction: column; }
+.yt-download-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 42px;
+  min-width: 190px;
+  max-width: 280px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(28,28,28,.98);
+  box-shadow: 0 4px 18px rgba(0,0,0,.45);
+}
+.yt-download-option {
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  padding: 9px 12px;
+  text-align: left;
+  font: 400 13px Roboto, Arial, sans-serif;
+}
+.yt-download-option:hover { background: rgba(255,255,255,.18); }
+.yt-download-option:disabled { cursor: wait; opacity: .65; }
+.yt-download-status { color: #fff; padding: 9px 12px; font: 400 12px Roboto, Arial, sans-serif; }
+.yt-download-error { max-width: 250px; white-space: normal; }

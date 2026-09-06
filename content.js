@@ -31,28 +31,82 @@
   }
 
   function createDownloadButton() {
-    const el = document.createElement('button');
-    el.id = 'yt-extension-download';
-    el.type = 'button';
-    el.className = 'yt-extension-download';
-    el.textContent = 'Download';
-    el.title = 'เปิด Download ของ YouTube';
-    el.setAttribute('aria-label', 'เปิด Download ของ YouTube');
-    el.addEventListener('click', event => {
+    const wrap = document.createElement('div');
+    wrap.id = 'yt-extension-download';
+    wrap.className = 'yt-download-control';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'yt-extension-download';
+    button.textContent = 'Download';
+    button.title = 'ดาวน์โหลดวิดีโอ';
+    button.setAttribute('aria-label', 'ดาวน์โหลดวิดีโอ');
+    button.setAttribute('aria-expanded', 'false');
+
+    const menu = document.createElement('div');
+    menu.className = 'yt-download-menu';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML = '<div class="yt-download-status">กำลังค้นหาคุณภาพ...</div>';
+
+    button.addEventListener('click', async event => {
       event.stopPropagation();
-      const native = [...document.querySelectorAll('button, tp-yt-paper-item, ytd-menu-service-item-renderer')]
-        .find(item => /download/i.test(`${item.getAttribute('aria-label') || ''} ${item.getAttribute('title') || ''} ${item.textContent || ''}`));
-      if (native) native.click();
-      else {
-        el.title = 'ไม่พบ Download ของ YouTube สำหรับวิดีโอนี้';
-        el.setAttribute('aria-label', el.title);
-        setTimeout(() => {
-          el.title = 'เปิด Download ของ YouTube';
-          el.setAttribute('aria-label', 'เปิด Download ของ YouTube');
-        }, 2500);
-      }
+      const open = wrap.classList.toggle('yt-download-open');
+      button.setAttribute('aria-expanded', String(open));
+      if (open && !menu.dataset.loaded) await loadDownloadFormats(menu);
     });
-    return el;
+
+    wrap.append(button, menu);
+    return wrap;
+  }
+
+  async function loadDownloadFormats(menu) {
+    const videoUrl = location.href;
+    try {
+      const result = await chrome.runtime.sendMessage({ type: 'GET_DOWNLOAD_FORMATS', videoUrl });
+      if (!result?.ok) throw new Error(result?.error || 'ไม่พบรูปแบบที่ดาวน์โหลดได้');
+      menu.textContent = '';
+      if (!result.formats?.length) throw new Error('วิดีโอนี้ไม่มีสตรีม MP4 ที่ดาวน์โหลดได้โดยตรง');
+      result.formats.forEach(format => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'yt-download-option';
+        item.setAttribute('role', 'menuitem');
+        const size = format.contentLength ? ` • ${formatBytes(format.contentLength)}` : '';
+        item.textContent = `${format.qualityLabel}${format.fps ? ` • ${format.fps}fps` : ''}${size}`;
+        item.addEventListener('click', async event => {
+          event.stopPropagation();
+          item.disabled = true;
+          item.textContent = 'กำลังเริ่มดาวน์โหลด...';
+          try {
+            const safeTitle = String(result.title || 'youtube-video').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
+            const filename = `${safeTitle}-${format.qualityLabel}.mp4`;
+            const started = await chrome.runtime.sendMessage({ type: 'START_DOWNLOAD', url: format.url, filename });
+            if (!started?.ok) throw new Error(started?.error || 'เริ่มดาวน์โหลดไม่สำเร็จ');
+            menu.parentElement.classList.remove('yt-download-open');
+          } catch (error) {
+            item.disabled = false;
+            item.textContent = `${format.qualityLabel} • ${error.message}`;
+          }
+        });
+        menu.appendChild(item);
+      });
+      menu.dataset.loaded = 'true';
+    } catch (error) {
+      menu.innerHTML = `<div class="yt-download-status yt-download-error">${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes) return '';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = Number(bytes);
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit++; }
+    return `${value.toFixed(unit ? 1 : 0)} ${units[unit]}`;
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch]);
   }
 
   function createSpeedControl() {
