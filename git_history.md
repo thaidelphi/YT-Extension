@@ -1,5 +1,10 @@
 # Git Push History
 
+## 2026-09-06 — Strengthen YouTube ad blocking
+- Commit: `c2d972f`
+- Change: Strengthened YouTube-focused ad blocking with additional ad-network rules, higher priorities, expanded player ad cleanup, and retained automatic Skip Ad handling.
+- Push: SUCCESS — `main` → `origin/main`
+
 ## 2026-09-06 — Add ad blocking layer
 - Commit: `6ab1a31`
 - Change: Added Declarative Net Request blocking for external ad networks and YouTube ad overlay cleanup while retaining automatic Skip Ad handling.
