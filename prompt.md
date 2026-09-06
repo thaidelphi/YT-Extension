@@ -173,3 +173,17 @@ Download ไม่ได้
 ปรับระบบให้เก็บ URL จาก `video.currentSrc` และ resource ที่ player โหลดจาก `googlevideo.com/videoplayback` แล้วส่งให้ background สำหรับสร้างรายการดาวน์โหลดโดยตรง พร้อมทำความสะอาด query ที่เป็น range ของ segment ก่อนส่งเข้า Chrome Downloads API
 
 เพิ่ม `googlevideo.com` ใน host permissions และตรวจสอบ syntax ของ `content.js`, `background.js` และ JSON ของ `manifest.json` แล้ว
+
+## 2026-09-06 — Fix Download ได้เป็น .txt / โหลดไม่ผ่าน
+
+### Prompt จากผู้ใช้
+Download ไม่ได้ และไฟล์ที่ได้เป็น `.txt` โหลดไม่ผ่าน
+
+### คำตอบ / ผลการดำเนินงาน
+ตรวจสอบระบบ Custom Downloader แล้วพบจุดเสี่ยงสำคัญคือมีการดัดแปลง query parameters ของ signed `googlevideo.com` playback URL (`range`, `rn`, `rbuf`, `alr`) ซึ่งอาจทำให้ URL สตรีมใช้ไม่ได้และเซิร์ฟเวอร์ส่งข้อความ error แทนไฟล์วิดีโอ
+
+แก้ `background.js` ให้คง playback URL ตามต้นฉบับ ไม่ลบ query parameters, ตรวจสตรีมด้วย HTTP Range probe และตรวจ `Content-Type` ก่อนเริ่ม Chrome Download พร้อมส่ง `Referer: https://www.youtube.com/` ในคำขอดาวน์โหลด
+
+ระบบจะปฏิเสธการดาวน์โหลดหากปลายทางตอบเป็นข้อความ/หน้า error แทนที่จะสร้างไฟล์ `.txt` ที่ใช้งานไม่ได้
+
+ตรวจสอบ syntax ของ `background.js`, `content.js`, `popup.js`, `adblock/ad_engine.js` และ JSON ของ `manifest.json` แล้วผ่าน

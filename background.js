@@ -241,7 +241,6 @@ function parsePlaybackFormat(url) {
     const height = Number(u.searchParams.get('height') || 0);
     const fps = Number(u.searchParams.get('fps') || 0);
     const contentLength = Number(u.searchParams.get('clen') || 0);
-    for (const key of ['range', 'rn', 'rbuf', 'alr']) u.searchParams.delete(key);
     return {
       itag,
       url: u.toString(),
@@ -266,9 +265,27 @@ async function startDownload(url, filename) {
   if (!url || !/^https?:\/\/(?:[^/]+\.)?googlevideo\.com\//.test(url)) {
     throw new Error('Download URL จากสตรีมวิดีโอไม่ถูกต้อง');
   }
+  let probe;
+  try {
+    probe = await fetch(url, {
+      headers: { Range: 'bytes=0-1023' },
+      referrer: 'https://www.youtube.com/',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+      credentials: 'include',
+      cache: 'no-store'
+    });
+  } catch (_) {
+    throw new Error('เชื่อมต่อสตรีมวิดีโอไม่ได้ กรุณาเปิดวิดีโอและลองใหม่');
+  }
+  const contentType = (probe.headers.get('content-type') || '').toLowerCase();
+  if (!probe.ok || (!contentType.startsWith('video/') && !contentType.includes('application/octet-stream'))) {
+    throw new Error(`สตรีมไม่พร้อมสำหรับดาวน์โหลด (${probe.status} ${contentType || 'unknown'})`);
+  }
+  await probe.body?.cancel();
   const id = await chrome.downloads.download({
     url,
     filename: sanitizeFilename(filename || 'youtube-video.mp4'),
+    headers: [{ name: 'Referer', value: 'https://www.youtube.com/' }],
     saveAs: true
   });
   return { ok: true, downloadId: id };
