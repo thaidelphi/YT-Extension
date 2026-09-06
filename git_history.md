@@ -87,3 +87,10 @@
 - Added YouTube Referer header to the Chrome download request.
 - Prevented text/error responses from being saved as apparent video files.
 - Push: SUCCESS — main → origin/main
+
+## 2026-09-06 — Reliable Custom Download via Playback Recording
+- Replaced unreliable direct signed `googlevideo.com` download path with browser-side playback capture using `captureStream()` + `MediaRecorder`.
+- Download menu now records the current YouTube playback and saves a `.webm` file directly without invoking YouTube's Download control.
+- Rejects unsupported browsers/codecs with a clear UI message and shows recording progress.
+- Commit: `8e12ebe` — Use playback recording for reliable downloader
+- Push: SUCCESS — main → origin/main
