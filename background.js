@@ -2,6 +2,7 @@ const API_BASE = 'https://www.googleapis.com/youtube/v3';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
+const AD_RULESET_ID = 'ad_block_rules';
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message).then(sendResponse).catch(error => {
@@ -16,11 +17,58 @@ async function handleMessage(message) {
     case 'TOGGLE_DISLIKE': return { ok: true, rating: await toggleDislike(message.videoId) };
     case 'LOGIN': await login(); return { ok: true };
     case 'LOGOUT': await logout(); return { ok: true };
-    case 'STATUS': return { ok: true, loggedIn: !!(await getAccessToken(false)) };
-    case 'SET_ADBLOCK': await chrome.storage.local.set({ adBlockEnabled: message.enabled !== false }); return { ok: true };
+    case 'STATUS': return await getStatus();
+    case 'SET_ADBLOCK': return await setAdBlockEnabled(message.enabled !== false);
     default: throw new Error('ไม่รู้จักคำสั่งจาก Extension');
   }
 }
+
+async function getStatus() {
+  const data = await chrome.storage.local.get(['adBlockEnabled']);
+  let ruleEnabled = false;
+  try {
+    const rules = await chrome.declarativeNetRequest.getEnabledRulesets();
+    ruleEnabled = rules.includes(AD_RULESET_ID);
+  } catch (error) {
+    console.debug('[YT AdBlock] ruleset status unavailable', error);
+  }
+  return {
+    ok: true,
+    loggedIn: !!(await getAccessToken(false)),
+    adBlockEnabled: data.adBlockEnabled !== false,
+    dnrEnabled: ruleEnabled
+  };
+}
+
+async function setAdBlockEnabled(enabled) {
+  const value = enabled === true;
+  if (value) {
+    await chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: [AD_RULESET_ID] });
+  } else {
+    await chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: [AD_RULESET_ID] });
+  }
+  await chrome.storage.local.set({ adBlockEnabled: value });
+  return getStatus();
+}
+
+chrome.runtime.onInstalled.addListener(async details => {
+  try {
+    const data = await chrome.storage.local.get(['adBlockEnabled']);
+    if (details.reason === 'install' && data.adBlockEnabled === undefined) {
+      await setAdBlockEnabled(true);
+    } else if (data.adBlockEnabled !== undefined) {
+      await setAdBlockEnabled(data.adBlockEnabled === true);
+    }
+  } catch (error) {
+    console.error('[YT AdBlock] install/update sync failed', error);
+  }
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.get(['adBlockEnabled']).then(data => {
+    setAdBlockEnabled(data.adBlockEnabled !== false).catch(error => console.error('[YT AdBlock] startup sync failed', error));
+  });
+});
 
 async function getClientId() {
   const data = await chrome.storage.local.get(['clientId']);

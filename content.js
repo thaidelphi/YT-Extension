@@ -4,10 +4,10 @@
   let button = null;
   let speedControl = null;
   let speedButton = null;
-  let speedMenu = null;
   let mountScheduled = false;
   let errorTimer = null;
 
+  const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
   const getVideoId = () => new URL(location.href).searchParams.get('v');
   const video = () => document.querySelector('video.html5-main-video, video');
 
@@ -24,6 +24,11 @@
     return el;
   }
 
+  function formatSpeed(rate) {
+    const value = Number(rate) || 1;
+    return `${Number.isInteger(value) ? value : value}×`;
+  }
+
   function createSpeedControl() {
     const wrap = document.createElement('div');
     wrap.id = 'yt-speed-control';
@@ -31,51 +36,47 @@
     speedButton = document.createElement('button');
     speedButton.type = 'button';
     speedButton.className = 'yt-speed-button';
-    speedButton.title = 'Playback speed';
-    speedButton.setAttribute('aria-label', 'Playback speed');
-    speedButton.setAttribute('aria-expanded', 'false');
+    speedButton.title = 'เปลี่ยนความเร็วการเล่น';
+    speedButton.setAttribute('aria-label', 'เปลี่ยนความเร็วการเล่น');
     speedButton.innerHTML = '<span class="yt-speed-value">1×</span>';
-    speedMenu = document.createElement('div');
-    speedMenu.className = 'yt-speed-menu';
-    speedMenu.setAttribute('role', 'menu');
-    [0.5,0.75,1,1.25,1.5,1.75,2,2.5,3].forEach(rate => {
-      const item = document.createElement('button');
-      item.type = 'button'; item.className = 'yt-speed-option';
-      item.dataset.rate = String(rate); item.textContent = `${rate}×`;
-      item.setAttribute('role', 'menuitem');
-      item.addEventListener('click', () => setPlaybackRate(rate));
-      speedMenu.appendChild(item);
+    speedButton.addEventListener('click', event => {
+      event.stopPropagation();
+      cyclePlaybackRate();
     });
-    speedButton.addEventListener('click', e => {
-      e.stopPropagation();
-      const open = wrap.classList.toggle('yt-speed-open');
-      speedButton.setAttribute('aria-expanded', String(open));
-    });
-    wrap.append(speedButton, speedMenu);
+    wrap.append(speedButton);
     return wrap;
+  }
+
+  function updateSpeed(rate) {
+    if (!speedButton) return;
+    speedButton.querySelector('.yt-speed-value').textContent = formatSpeed(rate);
+    speedButton.title = `ความเร็ว ${formatSpeed(rate)} • คลิกเพื่อเปลี่ยน`;
+    speedButton.setAttribute('aria-label', `ความเร็ว ${formatSpeed(rate)} • คลิกเพื่อเปลี่ยน`);
   }
 
   function setPlaybackRate(rate) {
     const v = video();
     if (!v) return;
-    v.playbackRate = rate;
-    updateSpeed(rate);
-    speedMenu?.querySelectorAll('.yt-speed-option').forEach(item => {
-      item.classList.toggle('yt-speed-selected', Number(item.dataset.rate) === rate);
-    });
-    speedControl?.classList.remove('yt-speed-open');
-    speedButton?.setAttribute('aria-expanded', 'false');
+    const normalized = Number(rate);
+    if (!Number.isFinite(normalized)) return;
+    v.playbackRate = normalized;
+    updateSpeed(normalized);
   }
-  function updateSpeed(rate) {
-    if (!speedButton) return;
-    const value = Number(rate) || 1;
-    speedButton.querySelector('.yt-speed-value').textContent = `${value}×`;
+
+  function cyclePlaybackRate() {
+    const v = video();
+    if (!v) return;
+    const current = Number(v.playbackRate) || 1;
+    const index = SPEEDS.findIndex(rate => Math.abs(rate - current) < 0.01);
+    const next = SPEEDS[(index + 1) % SPEEDS.length];
+    setPlaybackRate(next);
   }
+
   async function applyDefaultSpeed() {
     const data = await chrome.storage.local.get(['defaultSpeed']);
     const rate = Number(data.defaultSpeed || 1);
     const v = video();
-    if (v && Number.isFinite(rate)) { v.playbackRate = rate; updateSpeed(rate); }
+    if (v && Number.isFinite(rate)) setPlaybackRate(rate);
   }
   function updateButton(rating) {
     if (!button) return;
@@ -85,70 +86,98 @@
     button.title = active ? 'Remove Dislike' : 'Dislike';
     button.setAttribute('aria-label', button.title);
   }
+
   function showError(message) {
     if (!message || !button) return;
     button.setAttribute('data-error', message);
     clearTimeout(errorTimer);
     errorTimer = setTimeout(() => button?.removeAttribute('data-error'), 5000);
   }
+
   async function toggleDislike(el) {
     const videoId = getVideoId();
     if (!videoId || el.disabled) return;
-    el.disabled = true; el.classList.add('yt-dr-loading');
+    el.disabled = true;
+    el.classList.add('yt-dr-loading');
     try {
-      const result = await chrome.runtime.sendMessage({type:'TOGGLE_DISLIKE', videoId});
+      const result = await chrome.runtime.sendMessage({ type: 'TOGGLE_DISLIKE', videoId });
       if (!result?.ok) throw new Error(result?.error || 'ไม่สามารถส่ง Dislike ได้');
       updateButton(result.rating);
     } catch (error) {
       console.error('[YT Dislike]', error);
       showError(error.message || 'เกิดข้อผิดพลาดในการส่ง Dislike');
-    } finally { el.disabled = false; el.classList.remove('yt-dr-loading'); }
+    } finally {
+      el.disabled = false;
+      el.classList.remove('yt-dr-loading');
+    }
   }
+
   async function refreshRating(videoId) {
     if (!button || !videoId) return;
     try {
-      const result = await chrome.runtime.sendMessage({type:'GET_RATING', videoId});
+      const result = await chrome.runtime.sendMessage({ type: 'GET_RATING', videoId });
       if (result?.ok && videoId === getVideoId()) updateButton(result.rating);
       else if (!result?.ok) showError(result?.error);
-    } catch (error) { console.debug('[YT Dislike] rating check failed', error); }
+    } catch (error) {
+      console.debug('[YT Dislike] rating check failed', error);
+    }
   }
 
   function mount() {
     mountScheduled = false;
     if (!location.pathname.startsWith('/watch')) return;
+
     const container = document.querySelector('#top-level-buttons-computed');
     if (container) {
+      const existing = container.querySelector('#yt-dislike-restorer');
+      if (existing && existing !== button) button = existing;
       if (!button || !document.contains(button)) button = createButton();
       if (!container.contains(button)) container.appendChild(button);
     }
+
     const controls = document.querySelector('.ytp-right-controls');
     if (controls) {
-      if (!speedButton || !document.contains(speedButton)) {
+      const existingSpeed = controls.querySelector('#yt-speed-control');
+      if (existingSpeed) {
+        speedControl = existingSpeed;
+        speedButton = existingSpeed.querySelector('.yt-speed-button');
+      } else {
         speedControl = createSpeedControl();
         controls.prepend(speedControl);
       }
-      const v = video(); if (v) updateSpeed(v.playbackRate);
+      const v = video();
+      if (v) updateSpeed(v.playbackRate);
     }
+
     const id = getVideoId();
     if (id && id !== lastVideoId) {
-      lastVideoId = id; updateButton('none');
-      applyDefaultSpeed(); refreshRating(id);
+      lastVideoId = id;
+      updateButton('none');
+      applyDefaultSpeed();
+      refreshRating(id);
     }
   }
+
   function scheduleMount() {
     if (mountScheduled) return;
     mountScheduled = true;
     requestAnimationFrame(mount);
   }
-  document.addEventListener('click', e => {
-    if (speedControl && !speedControl.contains(e.target)) {
-      speedControl.classList.remove('yt-speed-open');
-      speedButton?.setAttribute('aria-expanded', 'false');
-    }
+
+  document.addEventListener('click', event => {
+    if (speedControl && !speedControl.contains(event.target)) return;
   }, true);
-  new MutationObserver(scheduleMount).observe(document.documentElement, {childList:true, subtree:true});
+
+  new MutationObserver(scheduleMount).observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
   window.addEventListener('yt-navigate-finish', () => {
-    lastVideoId = null; button = null; speedControl = null; speedButton = null; speedMenu = null;
+    lastVideoId = null;
+    button = null;
+    speedControl = null;
+    speedButton = null;
     setTimeout(scheduleMount, 100);
   });
   window.addEventListener('popstate', scheduleMount);

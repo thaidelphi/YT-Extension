@@ -35,6 +35,8 @@ async function refresh() {
   try {
     const result = await send('STATUS');
     loginStatus.textContent = result.loggedIn ? 'Google: เข้าสู่ระบบแล้ว ✓' : 'Google: ยังไม่ได้เข้าสู่ระบบ';
+    adEnabled.checked = result.adBlockEnabled;
+    updateAdBadge(result.adBlockEnabled, result.dnrEnabled);
     setStatus('การตั้งค่าพร้อมใช้งาน ✓', 'ok');
   } catch (error) {
     loginStatus.textContent = `Google: ${error.message}`;
@@ -42,10 +44,12 @@ async function refresh() {
   }
 }
 
-function updateAdBadge(enabled) {
-  adBadge.textContent = enabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
-  adBadge.className = `badge ${enabled ? 'on' : 'off'}`;
-  engineInfo.textContent = enabled ? 'Engine: Multi-layer scoring • threshold 3' : 'Engine: หยุดการบังคับใช้ชั่วคราว';
+function updateAdBadge(enabled, dnrEnabled = enabled) {
+  adBadge.textContent = enabled && dnrEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+  adBadge.className = `badge ${enabled && dnrEnabled ? 'on' : 'off'}`;
+  engineInfo.textContent = enabled && dnrEnabled
+    ? 'Engine: Multi-layer scoring • DNR: ON • threshold 3'
+    : 'Engine: หยุดการบังคับใช้ • DNR: OFF';
 }
 
 adEnabled.addEventListener('change', async () => {

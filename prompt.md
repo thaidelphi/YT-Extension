@@ -110,3 +110,23 @@
 ปรับ `content.js` ให้โค้ด UI/Dislike/Playback Speed แยกจากระบบโฆษณาชัดเจนขึ้น และแก้ข้อความ error ภาษาไทยที่มีปัญหา encoding ให้เป็น UTF-8 ที่อ่านได้ปกติ รวมถึงปรับการจัดการ Playback Speed ให้กระชับขึ้น
 
 ย้าย `ad_blocker.js` เดิมออกจาก root ไปเป็น `adblock/ad_blocker_legacy.js` เพื่อไม่ให้สับสนกับ Engine หลัก โดยไม่โหลดไฟล์ legacy ผ่าน manifest
+
+## 2026-09-06 — Single Playback Speed Button
+
+### Prompt จากผู้ใช้
+ตั้งความเร็ว หน้า youtube เอาไว้ปุ่มเดียวพอ
+
+### คำตอบ / ผลการดำเนินงาน
+ปรับ Playback Speed บนหน้า YouTube ให้เหลือปุ่มเดียว โดยคลิกแต่ละครั้งจะวนความเร็วตามลำดับ 0.5×, 0.75×, 1×, 1.25×, 1.5×, 1.75×, 2×, 2.5× และ 3× พร้อมแสดงค่าปัจจุบันบนปุ่ม และป้องกันการสร้างปุ่มซ้ำบน YouTube SPA
+
+## 2026-09-06 — Ad Blocker Toggle Controls DNR
+
+### Prompt จากผู้ใช้
+แก้เรื่อง Ad Blocker toggle ให้ควบคุม DNR rules ได้จริงด้วย
+
+### คำตอบ / ผลการดำเนินงาน
+ปรับ `background.js` ให้ Ad Blocker toggle ควบคุม Declarative Net Request ruleset `ad_block_rules` ด้วย `chrome.declarativeNetRequest.updateEnabledRulesets()` จริง พร้อมตรวจสถานะผ่าน `getEnabledRulesets()` และส่งสถานะ `adBlockEnabled`/`dnrEnabled` ให้ Control Center แสดงผลตรงกับการทำงานจริง
+
+ปรับการ initialize ตอนติดตั้ง/อัปเดตไม่ให้เปิดกฎกลับเองโดยไม่คำนึงถึงค่าที่ผู้ใช้ตั้งไว้ และคงการ sync ตอน browser startup
+
+ตรวจสอบ syntax ของ `background.js`, `content.js`, `popup.js`, `adblock/ad_engine.js` และตรวจว่า `rules.json` เป็น JSON ที่ถูกต้องแล้ว
