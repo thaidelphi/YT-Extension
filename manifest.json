@@ -3,7 +3,7 @@
   "name": "YouTube Dislike Restorer",
   "version": "0.1.1",
   "description": "Restore YouTube Dislike and add aggressive local ad filtering.",
-  "permissions": ["identity", "storage", "declarativeNetRequest", "downloads"],
+  "permissions": ["identity", "storage", "declarativeNetRequest", "downloads", "offscreen"],
   "declarative_net_request": {
     "rule_resources": [
       {

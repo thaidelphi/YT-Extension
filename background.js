@@ -20,6 +20,8 @@ async function handleMessage(message) {
     case 'STATUS': return await getStatus();
     case 'SET_ADBLOCK': return await setAdBlockEnabled(message.enabled !== false);
     case 'GET_DOWNLOAD_FORMATS': return await getDownloadFormats(message.videoUrl, message.playbackUrls || []);
+    case 'START_OFFSCREEN_DOWNLOAD': return await startOffscreenDownload(message.url, message.filename);
+    case 'OFFSCREEN_DOWNLOAD_STATUS': return { ok: true };
     case 'START_DOWNLOAD': return await startDownload(message.url, message.filename);
     default: throw new Error('ไม่รู้จักคำสั่งจาก Extension');
   }
@@ -259,6 +261,35 @@ function uniqueFormats(formats) {
     if (!unique.some(x => (x.height ? `${x.height}:${x.fps}` : x.url) === key)) unique.push(item);
   }
   return unique;
+}
+
+async function startOffscreenDownload(url, filename) {
+  if (!url || !/^https:\/\/(?:[^/]+\.)?googlevideo\.com\//.test(url)) {
+    throw new Error('Download URL จากสตรีมวิดีโอไม่ถูกต้อง');
+  }
+
+  await ensureOffscreenDocument();
+  const jobId = crypto.randomUUID();
+  await chrome.runtime.sendMessage({
+    type: 'OFFSCREEN_DOWNLOAD',
+    url,
+    filename: sanitizeFilename(filename || 'youtube-video.mp4'),
+    jobId
+  });
+  return { ok: true, jobId };
+}
+
+async function ensureOffscreenDocument() {
+  const contexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [chrome.runtime.getURL('offscreen.html')]
+  });
+  if (contexts.length) return;
+  await chrome.offscreen.createDocument({
+    url: 'offscreen.html',
+    reasons: ['BLOBS'],
+    justification: 'Fetch and save a user-selected YouTube media stream as a local file.'
+  });
 }
 
 async function startDownload(url, filename) {

@@ -7,6 +7,7 @@
   let downloadButton = null;
   let mountScheduled = false;
   let errorTimer = null;
+  const downloadJobs = new Map();
 
   const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
   const getVideoId = () => new URL(location.href).searchParams.get('v');
@@ -86,7 +87,7 @@
           item.textContent = `กำลังดาวน์โหลด ${format.qualityLabel || 'Video'}... 0%`;
           try {
             const filename = `${sanitizeDownloadName(result.title)}-${format.qualityLabel || 'video'}.mp4`;
-            await downloadStreamToFile(format.url, filename, item);
+            await startOffscreenDownload(format.url, filename, item);
           } catch (error) {
             item.disabled = false;
             item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${error.message}`;
@@ -99,40 +100,40 @@
     }
   }
 
-  async function downloadStreamToFile(streamUrl, filename, statusItem) {
-    const response = await fetch(streamUrl, { credentials: 'include', cache: 'no-store' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const contentType = (response.headers.get('content-type') || '').toLowerCase();
-    if (contentType.includes('text/html') || contentType.includes('text/plain')) {
-      throw new Error('เซิร์ฟเวอร์ส่งข้อมูลที่ไม่ใช่วิดีโอ');
-    }
-    if (!response.body) throw new Error('เบราว์เซอร์ไม่รองรับการอ่านสตรีม');
-
-    const total = Number(response.headers.get('content-length')) || 0;
-    const chunks = [];
-    const reader = response.body.getReader();
-    let received = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      received += value.byteLength;
-      if (total) statusItem.textContent = `กำลังดาวน์โหลด... ${Math.min(100, Math.floor(received * 100 / total))}%`;
-      else statusItem.textContent = `กำลังดาวน์โหลด... ${formatBytes(received)}`;
-    }
-
-    const blob = new Blob(chunks, { type: contentType || 'video/mp4' });
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = filename;
-    document.documentElement.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
-    statusItem.disabled = false;
-    statusItem.textContent = 'ดาวน์โหลดเสร็จแล้ว ✓';
+  async function startOffscreenDownload(streamUrl, filename, statusItem) {
+    const result = await chrome.runtime.sendMessage({
+      type: 'START_OFFSCREEN_DOWNLOAD',
+      url: streamUrl,
+      filename
+    });
+    if (!result?.ok || !result.jobId) throw new Error(result?.error || 'เริ่มดาวน์โหลดไม่ได้');
+    downloadJobs.set(result.jobId, statusItem);
+    statusItem.textContent = 'กำลังเชื่อมต่อสตรีม...';
   }
+
+  chrome.runtime.onMessage.addListener(message => {
+    if (message?.type !== 'OFFSCREEN_DOWNLOAD_STATUS') return;
+    const item = downloadJobs.get(message.jobId);
+    if (!item) return;
+
+    if (message.error) {
+      downloadJobs.delete(message.jobId);
+      item.disabled = false;
+      item.textContent = `ดาวน์โหลดไม่สำเร็จ: ${message.error}`;
+      return;
+    }
+    if (message.done) {
+      downloadJobs.delete(message.jobId);
+      item.disabled = false;
+      item.textContent = 'ดาวน์โหลดเสร็จแล้ว ✓';
+      return;
+    }
+    if (typeof message.progress === 'number') {
+      item.textContent = `กำลังดาวน์โหลด... ${message.progress}%`;
+    } else if (message.bytes) {
+      item.textContent = `กำลังดาวน์โหลด... ${formatBytes(message.bytes)}`;
+    }
+  });
 
   function sanitizeDownloadName(name) {
     return String(name || 'youtube-video').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 120) || 'youtube-video';

@@ -219,3 +219,20 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 ระบบกรอง URL แบบ segment/range ออกจากรายการไฟล์เดี่ยว เพื่อป้องกันการนำชิ้นส่วนวิดีโอมาโหลดเป็นไฟล์ผิดรูปแบบ และยังคงเก็บเทคนิค MediaRecorder ไว้ใน `docs/media_recording_download_technique.md` สำหรับนำไปใช้กับระบบอื่น
 
 ตรวจสอบ `content.js`, `background.js` และ `manifest.json` แล้วผ่าน validation
+
+
+## 2026-09-06 — Fix Custom Download HTTP 403
+
+### Prompt จากผู้ใช้
+ผู้ใช้ส่งภาพหน้าจอแสดงข้อผิดพลาดขณะใช้ปุ่ม Download: `ดาวน์โหลดไม่สำเร็จ: HTTP 403` ขณะรายการคุณภาพแสดง `360p • 30fps`
+
+### คำตอบ / ผลการดำเนินงาน
+แก้เส้นทางดาวน์โหลดโดยไม่ให้ content script เรียก `fetch()` ไปยัง `googlevideo.com` โดยตรงอีกต่อไป เพราะคำขอจากหน้า YouTube สามารถถูกปฏิเสธเป็น HTTP 403
+
+เพิ่ม Extension Offscreen Document สำหรับทำงานดาวน์โหลดแทน โดยให้ background service worker สร้าง `offscreen.html`, ส่ง signed playback URL ไปยัง `offscreen.js`, แล้วให้ offscreen context fetch สตรีมด้วย credentials และ YouTube referrer ก่อนอ่าน `ReadableStream` เป็น Blob และเริ่มบันทึกไฟล์
+
+เพิ่มระบบส่งสถานะ progress/error กลับไปยัง content script ผ่าน `jobId` เพื่อให้เมนู Download แสดงความคืบหน้าและข้อความผิดพลาดที่ตรงกับงานจริง
+
+เพิ่ม permission `offscreen` ใน manifest และสร้าง `offscreen.html` / `offscreen.js` โดยยังคงไม่แกะ signatureCipher, ไม่ข้าม DRM และไม่ใช้ Download ของ YouTube
+
+ตรวจสอบ syntax ของ `content.js`, `background.js`, `offscreen.js` และ JSON ของ `manifest.json` แล้วผ่าน validation
