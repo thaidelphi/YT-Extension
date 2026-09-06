@@ -236,3 +236,15 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 เพิ่ม permission `offscreen` ใน manifest และสร้าง `offscreen.html` / `offscreen.js` โดยยังคงไม่แกะ signatureCipher, ไม่ข้าม DRM และไม่ใช้ Download ของ YouTube
 
 ตรวจสอบ syntax ของ `content.js`, `background.js`, `offscreen.js` และ JSON ของ `manifest.json` แล้วผ่าน validation
+
+## 2026-09-06 — Fix Download ค้างที่กำลังเชื่อมต่อ stream
+
+### Prompt จากผู้ใช้
+ขึ้น กำลังเชื่อมต่อ stream นานมาก
+
+### คำตอบ / ผลการดำเนินงาน
+ตรวจพบ race condition ในระบบ Offscreen Downloader: `background.js` รอ `chrome.runtime.sendMessage()` ที่ส่งไปยัง `offscreen.html` จนกว่าการดาวน์โหลดจะเสร็จ ทำให้ Content Script ยังไม่ได้รับ `jobId` และพลาด status/progress ที่ Offscreen ส่งกลับมาระหว่างดาวน์โหลด
+
+แก้ `background.js` ให้เริ่ม Offscreen job แบบไม่รอผลการดาวน์โหลด แล้วคืน `jobId` ให้ Content Script ทันที จากนั้น progress/error/completion จะถูกส่งกลับผ่าน `OFFSCREEN_DOWNLOAD_STATUS` ตามปกติ
+
+จุดนี้แก้เฉพาะการค้างของสถานะ UI และลำดับการส่งข้อความ ยังต้องทดสอบดาวน์โหลดจริงกับสตรีม YouTube เพื่อยืนยันว่า endpoint ที่เลือกสามารถดาวน์โหลดได้จริง

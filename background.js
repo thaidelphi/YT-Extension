@@ -270,12 +270,12 @@ async function startOffscreenDownload(url, filename) {
 
   await ensureOffscreenDocument();
   const jobId = crypto.randomUUID();
-  await chrome.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     type: 'OFFSCREEN_DOWNLOAD',
     url,
     filename: sanitizeFilename(filename || 'youtube-video.mp4'),
     jobId
-  });
+  }).catch(error => console.debug('[YT Download] offscreen job ended', normalizeError(error)));
   return { ok: true, jobId };
 }
 
