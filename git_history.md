@@ -1,5 +1,10 @@
 # Git Push History
 
+## 2026-09-06 — Add aggressive local YouTube ad blocker
+- Commit: `7fd4ada`
+- Change: Added a dedicated aggressive YouTube ad blocker content script with rapid ad-state polling, MutationObserver detection, immediate Skip Ad/overlay-close attempts, expanded cosmetic hiding, and YouTube-focused DNR rules. Updated the extension to version `0.1.1` and fixed an existing malformed multiline selector string in `content.js` so the script passes syntax validation.
+- Push: SUCCESS — `main` → `origin/main`
+
 ## 2026-09-06 — Strengthen YouTube ad blocking
 - Commit: `c2d972f`
 - Change: Strengthened YouTube-focused ad blocking with additional ad-network rules, higher priorities, expanded player ad cleanup, and retained automatic Skip Ad handling.
