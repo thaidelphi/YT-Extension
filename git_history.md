@@ -124,3 +124,11 @@
 - Validation: JavaScript, manifest JSON and git diff check OK.
 - Push: SUCCESS � main  origin/main
 
+
+
+## 938a7c7 — Fix download status handshake race
+- Fixed the race condition where Offscreen download status could arrive before the YouTube Content Script registered the job.
+- Background now tracks download jobs by tab, queues early status messages, and relays progress/error/completion back to the correct YouTube tab.
+- Offscreen download now acknowledges the start request immediately and performs the download asynchronously.
+- Added a 20-second connection timeout so the UI cannot remain in `กำลังเชื่อมต่อสตรีม...` forever.
+- Push: SUCCESS — main → origin/main
