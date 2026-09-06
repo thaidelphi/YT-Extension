@@ -109,6 +109,7 @@
     if (!result?.ok || !result.jobId) throw new Error(result?.error || 'เริ่มดาวน์โหลดไม่ได้');
     downloadJobs.set(result.jobId, statusItem);
     statusItem.textContent = 'กำลังเชื่อมต่อสตรีม...';
+    chrome.runtime.sendMessage({ type: 'DOWNLOAD_JOB_READY', jobId: result.jobId }).catch(() => {});
   }
 
   chrome.runtime.onMessage.addListener(message => {

@@ -3,24 +3,32 @@
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type !== 'OFFSCREEN_DOWNLOAD') return;
-    download(message).then(() => sendResponse({ ok: true })).catch(error => {
-      sendResponse({ ok: false, error: error?.message || String(error) });
+    sendResponse({ ok: true });
+    download(message).catch(error => {
+      notify(message.jobId, { ok: false, error: error?.message || String(error) });
     });
-    return true;
   });
 
   async function download({ url, filename, jobId }) {
     let response;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
     try {
       response = await fetch(url, {
         credentials: 'include',
         cache: 'no-store',
         referrer: 'https://www.youtube.com/',
-        referrerPolicy: 'strict-origin-when-cross-origin'
+        referrerPolicy: 'strict-origin-when-cross-origin',
+        signal: controller.signal
       });
     } catch (error) {
-      notify(jobId, { ok: false, error: `เชื่อมต่อสตรีมไม่ได้: ${error.message || error}` });
-      throw error;
+      const message = error?.name === 'AbortError'
+        ? 'หมดเวลารอเซิร์ฟเวอร์สตรีม (20 วินาที)'
+        : `เชื่อมต่อสตรีมไม่ได้: ${error.message || error}`;
+      notify(jobId, { ok: false, error: message });
+      throw new Error(message);
+    } finally {
+      clearTimeout(timeout);
     }
 
     const type = (response.headers.get('content-type') || '').toLowerCase();

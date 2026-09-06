@@ -4,14 +4,16 @@ const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
 const AD_RULESET_ID = 'ad_block_rules';
 
+const downloadJobs = new Map();
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  handleMessage(message).then(sendResponse).catch(error => {
+  handleMessage(message, sender).then(sendResponse).catch(error => {
     sendResponse({ ok: false, error: normalizeError(error) });
   });
   return true;
 });
 
-async function handleMessage(message) {
+async function handleMessage(message, sender) {
   switch (message?.type) {
     case 'GET_RATING': return { ok: true, rating: await getRating(message.videoId) };
     case 'TOGGLE_DISLIKE': return { ok: true, rating: await toggleDislike(message.videoId) };
@@ -20,8 +22,9 @@ async function handleMessage(message) {
     case 'STATUS': return await getStatus();
     case 'SET_ADBLOCK': return await setAdBlockEnabled(message.enabled !== false);
     case 'GET_DOWNLOAD_FORMATS': return await getDownloadFormats(message.videoUrl, message.playbackUrls || []);
-    case 'START_OFFSCREEN_DOWNLOAD': return await startOffscreenDownload(message.url, message.filename);
-    case 'OFFSCREEN_DOWNLOAD_STATUS': return { ok: true };
+    case 'START_OFFSCREEN_DOWNLOAD': return await startOffscreenDownload(message.url, message.filename, sender);
+    case 'DOWNLOAD_JOB_READY': return await markDownloadJobReady(message.jobId);
+    case 'OFFSCREEN_DOWNLOAD_STATUS': return await forwardDownloadStatus(message);
     case 'START_DOWNLOAD': return await startDownload(message.url, message.filename);
     default: throw new Error('ไม่รู้จักคำสั่งจาก Extension');
   }
@@ -263,20 +266,55 @@ function uniqueFormats(formats) {
   return unique;
 }
 
-async function startOffscreenDownload(url, filename) {
+async function startOffscreenDownload(url, filename, sender) {
   if (!url || !/^https:\/\/(?:[^/]+\.)?googlevideo\.com\//.test(url)) {
     throw new Error('Download URL จากสตรีมวิดีโอไม่ถูกต้อง');
   }
+  if (!sender?.tab?.id) throw new Error('ไม่พบแท็บ YouTube สำหรับรายงานสถานะดาวน์โหลด');
 
   await ensureOffscreenDocument();
   const jobId = crypto.randomUUID();
+  downloadJobs.set(jobId, { tabId: sender.tab.id, createdAt: Date.now(), ready: false, pending: [] });
   chrome.runtime.sendMessage({
     type: 'OFFSCREEN_DOWNLOAD',
     url,
     filename: sanitizeFilename(filename || 'youtube-video.mp4'),
     jobId
-  }).catch(error => console.debug('[YT Download] offscreen job ended', normalizeError(error)));
+  }).catch(error => {
+    console.debug('[YT Download] offscreen job ended', normalizeError(error));
+    forwardDownloadStatus({ jobId, error: `เริ่มดาวน์โหลดไม่ได้: ${normalizeError(error)}` });
+  });
   return { ok: true, jobId };
+}
+
+async function markDownloadJobReady(jobId) {
+  const job = downloadJobs.get(jobId);
+  if (!job) return { ok: false, error: 'ไม่พบงานดาวน์โหลด' };
+  job.ready = true;
+  const pending = job.pending.splice(0);
+  for (const message of pending) await relayDownloadStatus(job, message);
+  if (pending.some(message => message.done || message.error)) downloadJobs.delete(jobId);
+  return { ok: true };
+}
+
+async function forwardDownloadStatus(message) {
+  const job = downloadJobs.get(message.jobId);
+  if (!job) return { ok: true };
+  if (!job.ready) {
+    job.pending.push(message);
+    return { ok: true };
+  }
+  await relayDownloadStatus(job, message);
+  if (message.done || message.error) downloadJobs.delete(message.jobId);
+  return { ok: true };
+}
+
+async function relayDownloadStatus(job, message) {
+  try {
+    await chrome.tabs.sendMessage(job.tabId, message);
+  } catch (error) {
+    console.debug('[YT Download] status relay failed', normalizeError(error));
+  }
 }
 
 async function ensureOffscreenDocument() {

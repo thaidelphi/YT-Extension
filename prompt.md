@@ -248,3 +248,17 @@ Download ไม่ได้ และไฟล์ที่ได้เป็น 
 แก้ `background.js` ให้เริ่ม Offscreen job แบบไม่รอผลการดาวน์โหลด แล้วคืน `jobId` ให้ Content Script ทันที จากนั้น progress/error/completion จะถูกส่งกลับผ่าน `OFFSCREEN_DOWNLOAD_STATUS` ตามปกติ
 
 จุดนี้แก้เฉพาะการค้างของสถานะ UI และลำดับการส่งข้อความ ยังต้องทดสอบดาวน์โหลดจริงกับสตรีม YouTube เพื่อยืนยันว่า endpoint ที่เลือกสามารถดาวน์โหลดได้จริง
+
+## 2026-09-06 — แก้สถานะ Download ค้างที่กำลังเชื่อมต่อสตรีม
+
+### Prompt จากผู้ใช้
+ยังขึ้น กำลังเชื่อมต่อสตรีม นานมาก
+
+### คำตอบ / ผลการดำเนินงาน
+ตรวจสอบแล้วพบ race condition ระหว่าง Content Script, Background Service Worker และ Offscreen Document ทำให้สถานะดาวน์โหลดถูกส่งกลับไปยัง Service Worker แต่ไม่ถูก relay ไปยังแท็บ YouTube หรืออาจถูกส่งก่อน Content Script ลงทะเบียน jobId
+
+แก้ระบบให้ Background เก็บสถานะงานตาม tab และ queue สถานะที่เกิดก่อน Content Script พร้อมเพิ่ม handshake `DOWNLOAD_JOB_READY` ก่อนส่งสถานะค้างกลับไปยังหน้า YouTube
+
+ปรับ Offscreen Document ให้ตอบรับการเริ่มงานทันที แล้วทำงานดาวน์โหลดแบบ background เพื่อไม่ให้ message ค้างรอจนดาวน์โหลดเสร็จ และเพิ่ม timeout 20 วินาทีสำหรับขั้นตอนเชื่อมต่อสตรีม เพื่อไม่ให้ UI ค้างไม่สิ้นสุด
+
+ผลที่ต้องทดสอบหลัง Reload Extension: จาก `กำลังเชื่อมต่อสตรีม...` ต้องเปลี่ยนเป็น progress หรือแสดง error จริงภายในเวลาที่เหมาะสม
