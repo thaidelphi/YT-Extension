@@ -72,3 +72,12 @@
 
 ### คำตอบ / ผลการดำเนินงาน
 แก้ข้อความ Playback Speed ที่แสดงผิด encoding จาก ร— เป็น ? ในปุ่มและรายการความเร็ว และเพิ่มตัวเลือกความเร็ว 2.5? และ 3?
+
+## 2026-09-06 — Multi-layer Ad Detection Engine
+
+### User Prompt
+ปรับโครงสร้างให้เป็น Engine และเพิ่มระบบตรวจจับหลายชั้น เพราะจะรับมือกับการเปลี่ยนแปลงของ YouTube ได้
+
+### AI Result
+ปรับโครงสร้างระบบ Ad Blocker เป็น YouTube Ad Detection Engine แยกใน adblock/ad_engine.js เพิ่มการตรวจจับหลายสัญญาณจาก player state, DOM ad modules/overlays, Skip/Close controls, MutationObserver และ polling พร้อม bridge สำหรับ SPA navigation และย้ายความรับผิดชอบด้านโฆษณาออกจาก content.js.
+

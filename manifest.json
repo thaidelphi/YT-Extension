@@ -1,4 +1,4 @@
-{
+﻿{
   "manifest_version": 3,
   "name": "YouTube Dislike Restorer",
   "version": "0.1.1",
@@ -28,9 +28,10 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["ad_blocker.js", "content.js"],
+      "js": ["adblock/ad_engine.js", "adblock/engine_bridge.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_start"
     }
   ]
 }
+

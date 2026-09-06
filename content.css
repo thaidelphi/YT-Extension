@@ -1,4 +1,4 @@
-.yt-dr-button {
+﻿.yt-dr-button {
   align-items: center;
   background: transparent;
   border: 0;
@@ -101,3 +101,4 @@ html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
 .yt-speed-option:hover,
 .yt-speed-option.yt-speed-selected { background: rgba(255,255,255,.18); }
 .yt-speed-option.yt-speed-selected { font-weight: 600; }
+
