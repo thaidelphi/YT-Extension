@@ -160,6 +160,12 @@
     if (!adShowing) return;
     skipAd();
     closeAdOverlay();
+
+    document.querySelectorAll(
+      '.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-overlay-slot, .ytp-ad-text-overlay'
+    ).forEach(el => {
+      el.style.setProperty('display', 'none', 'important');
+    });
   }
 
   function mount() {

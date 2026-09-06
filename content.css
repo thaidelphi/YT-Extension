@@ -44,6 +44,11 @@ html[dark] .yt-dr-button:hover { background: rgba(255,255,255,.10); }
 @keyframes yt-dr-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .yt-dr-button { transition: none; } .yt-dr-button.yt-dr-loading .yt-dr-icon { animation: none; } }
 
+/* Automatic ad blocking / cosmetic cleanup */
+.ytp-ad-overlay-container,
+.ytp-ad-overlay-slot,
+.ytp-ad-text-overlay { pointer-events: none !important; }
+
 /* Quick playback speed control */
 .yt-speed-control {
   position: relative;
