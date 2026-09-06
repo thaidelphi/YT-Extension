@@ -22,3 +22,11 @@
 - Kept Google OAuth and YouTube Dislike controls in the same dashboard.
 - Added persistent Ad Blocker and default speed settings.
 - Push: SUCCESS — main → origin/main
+
+
+## ed4be66 — Improve YouTube engine performance and cleanup
+- Refactored `adblock/ad_engine.js` into a scheduled multi-signal engine to reduce MutationObserver/polling overhead.
+- Kept scoring, threshold detection, Auto Skip and Auto Close behavior.
+- Simplified `content.js` and corrected visible Thai error messages to UTF-8.
+- Moved the duplicate legacy implementation to `adblock/ad_blocker_legacy.js`; it is not loaded by the manifest.
+- Push: SUCCESS — main → origin/main
