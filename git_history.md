@@ -72,3 +72,11 @@
 - Added `downloads` permission and custom download menu styling.
 - Restricted the implementation to directly exposed stream URLs; no signatureCipher/DRM bypass.
 - Push: SUCCESS â€” main â†’ origin/main
+
+## 2026-09-06 — Fix custom downloader stream detection
+- Detect direct playback URLs from the active video and loaded googlevideo resources.
+- Reuse direct MP4 playback URLs when page player metadata does not expose a plain URL.
+- Added googlevideo.com host permission and delayed URL collection fallback.
+- Validation: JavaScript and manifest JSON OK.
+- Commit: a41ad7f
+- Push: SUCCESS — main  origin/main
